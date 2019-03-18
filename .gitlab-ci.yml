@@ -1,0 +1,26 @@
+stages:
+  - build
+  - test 
+  - cleanup
+
+build_job: 
+  stage: build
+  script: 
+    - make clean-all J=1 BUILD_TAG=${CI_BUILD_REF} BRANCH_NAME=${CI_BUILD_REF_NAME}
+
+cleanup:
+  stage: cleanup
+  script:
+  - make clean BUILD_TAG=${CI_BUILD_REF} BRANCH_NAME=${CI_BUILD_REF_NAME}
+  when: on_success 
+
+cleanup_failed:
+  stage: cleanup
+  script:
+      - make clean-build BUILD_TAG=${CI_BUILD_REF} BRANCH_NAME=${CI_BUILD_REF_NAME}
+  when: on_failure
+
+test_job: 
+  stage: test
+  script: 
+    - make check J=4 BUILD_TAG=${CI_BUILD_REF} BRANCH_NAME=${CI_BUILD_REF_NAME}
