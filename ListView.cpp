@@ -57,7 +57,7 @@ void ListView::setDataModel( IListModel* m ){
 
 void ListView::onRowsInserted( int64_t begin, int64_t count ){
     if( begin < firstVisibleRow() ){
-        _viewport.y += count;
+        _viewport.y() += (int)count;
     }
 
     refresh(true);
@@ -65,7 +65,7 @@ void ListView::onRowsInserted( int64_t begin, int64_t count ){
 
 void ListView::onRowsRemoved( int64_t unused(begin), int64_t unused(count) ){
     if( begin < firstVisibleRow() ){
-        _viewport.y = std::max(0L, _viewport.y - count );
+        _viewport.y() = std::max(0L, _viewport.y() - count );
     }
 
     refresh(true);
@@ -114,15 +114,16 @@ void ListView::onDataChanged( const ListModelIndex& begin, const ListModelIndex&
 
 void ListView::adjustViewportTopLeft( int y, int x ){
     bool needsRefresh = y != 0 || x != 0;
-    _viewport.y += y;
-    _viewport.x += x;
+    _viewport.x() += x;
+    _viewport.y() += y; 
     if( needsRefresh ) this->refresh(true);
 }
 void ListView::setViewportTopLeft( int y, int x ){
-    bool needsRefresh = y != _viewport.y || x != _viewport.x;
+    bool needsRefresh = y != _viewport.y() || x != _viewport.x();
 
-    _viewport.y = y;
-    _viewport.x = x;
+    _viewport.y() = y;
+    _viewport.x() = x;
+
     if( needsRefresh ) this->refresh(true);
 }
 
@@ -165,7 +166,7 @@ const IListItemDelegate* ListView::cellDelegate( ListViewIndex ix ) const{
 }
 
 int64_t ListView::firstVisibleRow() const{
-    return std::max( 0L, std::min( (long)_viewport.y, std::max(0L,_model->rowCount() - visibleRows()) ) );
+    return std::max( 0L, std::min( (long)_viewport.y(), std::max(0L,_model->rowCount() - visibleRows()) ) );
 }
 
 Rectangle ListView::indexGeometry( const ListModelIndex& ix, int role ) const{
@@ -174,8 +175,9 @@ Rectangle ListView::indexGeometry( const ListModelIndex& ix, int role ) const{
     int64_t firstVisible = firstVisibleRow();
     int64_t rowY = ix.rowIndex() - firstVisible; //< rowY may be off the screen.
 
-    rv.topLeft.x = roleGeom.startX;
-    rv.topLeft.y = rowY;
+    rv.topLeft.x() = roleGeom.startX;
+    rv.topLeft.y() = rowY;
+
     rv.size.height = 1;
     rv.size.width  = roleGeom.width;
 
@@ -201,8 +203,8 @@ void ListView::draw( bool fullRefresh ){
             }
         }
 
-        if( _viewport.y < 0 ) _viewport.y = 0;
-        int startRow = std::min( (long)_viewport.y, std::max(0L,_model->rowCount() - visibleRows()) );
+        if( _viewport.y() < 0 ) _viewport.y() = 0;
+        int startRow = std::min( (long)_viewport.y(), std::max(0L,_model->rowCount() - visibleRows()) );
         if( !delegates._default ) delegates._default = &defaultListItemDelegate;
         for( int i = 0; i < std::min( (int64_t)visibleRows(), _model->rowCount()); ++i ){
             int rowIndex = startRow + i;

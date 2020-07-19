@@ -25,6 +25,8 @@
 #pragma once
 #include <stdexcept>
 #include <sstream>
+#include "Macros.hpp"
+
 extern "C"{
 #include <string.h>
 struct epoll_event;
@@ -49,4 +51,3 @@ class IFileEventHandler;
     }\
 }
 
-#define unused(SYM) SYM __attribute__((unused))

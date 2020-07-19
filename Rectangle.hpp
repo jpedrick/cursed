@@ -35,13 +35,12 @@ struct Rectangle{
     Size  size;
 
     inline bool contains( const Point& p ) const{
-        int relx = p.x - topLeft.x;
-        int rely = p.y - topLeft.y;
+        auto relPos = p - topLeft;
 
-        return ( relx >= 0 && relx < size.width ) && ( rely >= 0 && rely < size.height );
+        return ( relPos.get<X>().value() >= 0 && relPos.get<X>().value() < size.width ) && ( relPos.get<Y>().value() >= 0 && relPos.get<Y>().value() < size.height );
     }
     inline bool containsRelative( const Point& p ) const{
-        return ( p.x >= 0 && p.y >= 0 ) && ( p.x < size.width ) && ( p.y < size.height );
+        return ( p.get<X>().value() >= 0 && p.get<Y>().value() >= 0 ) && ( p.get<X>().value() < size.width ) && ( p.get<Y>().value() < size.height );
     }
 };
 

@@ -33,4 +33,14 @@ namespace cursed{
     }\
 }
 
+#define expect_equal( TEST_STATEMENT1, TEST_STATEMENT2 ) [&] () -> bool { \
+    bool testResult = ( TEST_STATEMENT1 == TEST_STATEMENT2 ); \
+    if( !testResult ){ \
+        cursed_out( "(" << #TEST_STATEMENT1 << "):" << TEST_STATEMENT1 << " != (" << #TEST_STATEMENT2 << "):" << TEST_STATEMENT2 << " FAILED" ); \
+    } else { \
+        cursed_out( "(" << #TEST_STATEMENT1 << "):" << TEST_STATEMENT1 << " == (" << #TEST_STATEMENT2 << "):" << TEST_STATEMENT2 << " PASSED" ); \
+    } \
+    return testResult; \
+}()
+
 }

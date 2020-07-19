@@ -49,24 +49,24 @@ namespace cursed{
             // indicate more text to left
             if( firstChar > 0 ){
                 Draw::AttributeGuard underline{ this, A_BOLD | A_UNDERLINE | A_DIM };
-                Draw::character( this, { 0, 0 }, _text[firstChar] );
+                Draw::character( this, {0,0}, _text[firstChar] );
             }
             int lastDisplayedChar = firstChar + displayedWidth - 1;
 
             // indicate more text to right
             if( _cursorPosition < lastDisplayedChar && (int)_text.size() > dim.size.width ){
                 Draw::AttributeGuard underline{ this, A_BOLD | A_UNDERLINE | A_DIM };
-                Draw::character( this, { displayedWidth - 1, 0 }, _text[lastDisplayedChar] );
+                Draw::character( this, {displayedWidth-1,0}, _text[lastDisplayedChar] );
             }
 
             if( _hasFocus )
             {
                 if( _cursorPosition < (int)_text.size() && _cursorPosition >= 0 ){
                     Draw::AttributeGuard revrs{ this, A_REVERSE };
-                    Draw::character( this, { _cursorPosition - firstChar, 0 }, _text[_cursorPosition] );
+                    Draw::character( this, {_cursorPosition-firstChar,0}, _text[_cursorPosition] );
                 }else{
                     Draw::AttributeGuard extended_blink{ this, A_REVERSE };
-                    Draw::character( this, { std::max(0,_cursorPosition - firstChar), 0 }, '_' );
+                    Draw::character( this, {std::max(0,_cursorPosition - firstChar),0}, '_' );
                 }
             }
         }

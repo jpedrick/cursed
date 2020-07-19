@@ -63,7 +63,7 @@ flags = [
 '-DQT_WIDGETS_LIB',
 '-DQT_XML_LIB',
 '-D__G_LIB_H__',
-'-std=gnu++11',
+'-std=c++17',
 '-x', 'c++',
 '-I', '.',
 '-isystem', '/usr/include/ncursesw',

@@ -26,32 +26,67 @@
 
 #include "Log.hpp"
 #include "Direction.hpp"
-
+#include "MultiDimensionalValue.hpp"
 
 namespace cursed{
 
-struct Point{
-    int x;
-    int y;
-    int z;
+struct XAxis;
+struct YAxis;
+struct ZAxis;
 
-    Point( int _x, int _y, int _z = 0 ) : x(_x), y(_y), z(_z) {}
-    Point() : x(0), y(0), z(0) {}
+using X = Dimension<XAxis,int>;
+using Y = Dimension<YAxis,int>;
+using Z = Dimension<ZAxis,int>;
+
+class Point : public MultiDimensionalValue<X,Y,Z> {
+public:
+    using MultiDimensionalValue<X,Y,Z>::MultiDimensionalValue;
+    Point( int x = 0, int y = 0, int z = 0 ) : MultiDimensionalValue { X{x}, Y{y}, Z{z} } {}
+    Point( const MultiDimensionalValue<X,Y,Z>& v ) : MultiDimensionalValue { v } {}
 
     int& getPosition( Direction d ){
-        if( d == Direction::Horizontal ) return x;
-        if( d == Direction::Vertical ) return y;
+        if( d == Direction::Horizontal ) return get<X>().valueRef();
+        if( d == Direction::Horizontal ) return get<Y>().valueRef();
 
-        return z;
+        return get<Z>().valueRef();
     }
+
+    int getPosition( Direction d ) const{
+        if( d == Direction::Horizontal ) return get<X>().value();
+        if( d == Direction::Horizontal ) return get<Y>().value();
+
+        return get<Z>().value();
+    }
+
+    X& x() { return this->get<X>(); }
+    Y& y() { return this->get<Y>(); }
+    Z& z() { return this->get<Z>(); }
+
+    const X& x() const { return this->get<X>(); }
+    const Y& y() const { return this->get<Y>(); }
+    const Z& z() const { return this->get<Z>(); }
 };
 
-inline Point operator+( Point p1, Point p2 ){
-    return { p1.x + p2.x, p1.y + p2.y, p1.z + p2.z };
+inline Point xyz( const X& x = X{}, const Y& y = Y{}, const Z& z = Z{} ){
+    return Point( x, y, z );
 }
 
-inline Point operator-( Point p1, Point p2 ){
-    return { p1.x - p2.x, p1.y - p2.y, p1.z - p2.z };
+inline Point xyz( int x = 0, int y = 0, int z = 0 ){
+    return Point( X{x}, Y{y}, Z{z} );
+}
+
+inline int& getPosition( Point& p, Direction d ){
+    if( d == Direction::Horizontal ) return p.x();
+    if( d == Direction::Horizontal ) return p.y();
+
+    return p.get<Z>();
+}
+
+inline int getPosition( const Point& p, Direction d ){
+    if( d == Direction::Horizontal ) return p.x();
+    if( d == Direction::Horizontal ) return p.y();
+
+    return p.z();
 }
 
 Log& operator<<( Log& o, const Point& r );

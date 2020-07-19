@@ -27,7 +27,7 @@
 namespace cursed{
 
 Log& operator<<( Log& o, const Point& r ){
-    return o << std::dec << "{" << "x:" << r.x << ",y:" << (int)r.y << ",z:" << r.z << "}";
+    return o << std::dec << "{" << "x:" << r.x() << ",y:" << r.y() << ",z:" << r.z() << "}";
 }
 
 }

@@ -71,7 +71,7 @@ public:
     template< typename... Args >
     ListView( IListModel* dataModel,  Args&&... args ) : 
         Window( std::forward<Args>(args)... ),
-        _viewport(-1,-1)
+        _viewport{-1,-1}
     { 
         delegates.clear();
         setDataModel( dataModel );

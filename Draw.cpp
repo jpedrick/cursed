@@ -23,20 +23,21 @@
 //  You should also have received a copy of the GNU Affero General Public License
 //  along with Cursed.  If not, see <https://www.gnu.org/licenses/>.
 #include "Draw.hpp"
+#include <memory>
 
 namespace cursed{
 
 void Draw::box( IWindow* win, Rectangle dim ){
     Point topLeft = dim.topLeft;
     Point topRight = dim.topLeft;
-    topRight.x += dim.size.width;
+    topRight.x() += dim.size.width;
 
     Point bottomRight = dim.topLeft;
-    topRight.y += dim.size.height;
-    topRight.x += dim.size.width;
+    topRight.y() += dim.size.height;
+    topRight.x() += dim.size.width;
 
-    Point bottomLeft= dim.topLeft;
-    topRight.y += dim.size.height;
+    Point bottomLeft = dim.topLeft;
+    topRight.y() += dim.size.height;
 
     cursed::Draw::line( win, cursed::Direction::Vertical, topLeft,    dim.size.height, ACS_VLINE );
     cursed::Draw::line( win, cursed::Direction::Vertical, topRight,   dim.size.height, ACS_VLINE );
@@ -56,13 +57,13 @@ void Draw::line( IWindow* win, Direction d, int pos, char c ){
         case Direction::Horizontal:{
             if( pos < win->dimensions().size.height ){                           
                 Point p = win->absolute( {0,pos} );
-                mvwhline( win->window(), p.y, p.x, c, win->dimensions().size.width );
+                mvwhline( win->window(), p.y(), p.x(), c, win->dimensions().size.width );
             }
         }break;
         case Direction::Vertical:{
             if( pos < win->dimensions().size.width ){                           
                 Point p = win->absolute( {pos,0} );
-                mvwvline( win->window(), p.y, p.x, c, win->dimensions().size.height );
+                mvwvline( win->window(), p.y(), p.x(), c, win->dimensions().size.height );
             }
         }break;
         default: break;
@@ -73,18 +74,18 @@ void Draw::line( IWindow* win, Direction d, Point start, int len, char c ){
     Point p = win->absolute( start );
     switch(d){
         case Direction::Horizontal:{
-            if( p.y < win->dimensions().size.height ){                           
-                int maxlen = std::min( len, win->dimensions().size.width - ( start.x + len ) );
+            if( p.y() < win->dimensions().size.height ){
+                int maxlen = std::min( len, win->dimensions().size.width - ( start.x() + len ) );
                 if( maxlen > 0 ){
-                    mvwhline( win->window(), p.y, p.x, c, maxlen );
+                    mvwhline( win->window(), p.y(), p.x(), c, maxlen );
                 }
             }
         }break;
         case Direction::Vertical:{
-            if( p.x < win->dimensions().size.width ){                           
-                int maxlen = std::min( len, win->dimensions().size.width - ( start.x + len ) );
+            if( p.x() < win->dimensions().size.width ){
+                int maxlen = std::min( len, win->dimensions().size.width - ( start.x() + len ) );
                 if( maxlen > 0 ){
-                    mvwvline( win->window(), p.y, p.x, c, maxlen );
+                    mvwvline( win->window(), p.y(), p.x(), c, maxlen );
                 }
             }
         }break;
@@ -104,14 +105,14 @@ Point Draw::getCursorPosition( IWindow* win ){
 
 void Draw::moveCursor( IWindow* win, Point position ){ 
     Point p = win->absolute( position );
-    ::wmove( win->window(), p.y, p.x );
+    ::wmove( win->window(), p.y(), p.x() );
 }
 
 void Draw::wcharacter( IWindow* win, Point position, wchar_t data ){
     Rectangle dim = win->dimensions();
     if( dim.containsRelative(position) ){
         Point p = win->absolute( position );
-        mvwaddch( win->window(), p.y, p.x, data ); 
+        mvwaddch( win->window(), p.y(), p.x(), data ); 
     }
 }
 
@@ -119,7 +120,7 @@ void Draw::character( IWindow* win, Point position, char data ){
     Rectangle dim = win->dimensions();
     if( dim.containsRelative(position) ){
         Point p = win->absolute( position );
-        mvwaddch( win->window(), p.y, p.x, data ); 
+        mvwaddch( win->window(), p.y(), p.x(), data ); 
     }
 }
 
@@ -133,13 +134,29 @@ void Draw::text( IWindow* win, Point start, const char* data, size_t len ){
 
     Rectangle dim = win->dimensions();
 
-    int displayLen = std::min( dim.size.width - start.x, (int)len );
+    int displayLen = std::min( dim.size.width - start.x(), (int)len );
     displayLen = std::max( displayLen, 0 );
 
     if( dim.containsRelative(start) && displayLen > 0 ){
-        mvwaddnstr( win->window(), p.y, p.x, data, displayLen );
+        mvwaddnstr( win->window(), p.y(), p.x(), data, displayLen );
     }
 }
+
+/*
+void Draw::text( IWindow* win, Point start, const char* data, size_t len ){
+    Point p = win->absolute( start );
+
+    char* token = nullptr;
+    auto buf = std::make_unique<char[]>(len);
+    char* remaining = buf.get();
+    strncpy(remaining,data,len);
+
+    while (( token = strtok_r( remaining, "\n", &remaining ) )){
+        textLine( win, start, token, strnlen(token, len) );
+        start.y() += 1;
+    }
+}
+*/
 
 void Draw::text( IWindow* win, Point start, const std::string& data ){ 
     Draw::text( win, start, data.data(), data.length() ); 

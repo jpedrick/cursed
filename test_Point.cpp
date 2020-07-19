@@ -29,22 +29,30 @@ int main( int, char* [] ){
     using namespace cursed;
 
     Point p1{ 1, 1, 1 };
-    Point p2{ 2, 2, 2 };
+    Point p2{ X{2}, Y{2}, Z{2} };
 
     Point p3 = p1 - p2;
-    expect( p3.x == -1 );
-    expect( p3.y == -1 );
-    expect( p3.z == -1 );
+    expect( p3.x() == -1 );
+    expect( p3.y() == -1 );
+    expect( p3.z() == -1 );
 
-    Point p4{ 35, 3, 0 };
+    Point p4{ 35, 3 };
     Point p5{ 0, 15, 0 };
 
-    expect( ( p4 - p5 ).y == -12 );
+    expect( Point{ p4 - p5 }.y() == -12 );
  
-    Point p6{16,4,0}; 
-    Point p7{0,10,0};
-    expect( ( p6 - p7 ).y == -6 );
-    cursed_out( cprint(p6-p7) );
+    Point p6{ 16, 4, 0 }; 
+    Point p7{ 0, 10, 0 };
+    expect( Point{ p6 - p7 }.y() == -6 );
+
+    p6.x() = 5;
+    p6.y() = 9;
+    p6.z() = 44;
+    expect_equal( p6.x(), 5 );
+    expect_equal( p6.y(), 9 );
+    expect_equal( p6.z(), 44 );
+
+    cursed_out( echo_stream(Point(p6-p7)) );
 
     return 0;
 }

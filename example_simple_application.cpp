@@ -33,12 +33,14 @@
 #include "ListView.hpp"
 #include "Color.hpp"
 #include "Button.hpp"
+#include "Macros.hpp"
 
 #include <fstream>
 #include <thread>
 #include <chrono>
 
 #include <ctime>
+
 
 class TimeWindow : public cursed::Window {
 public:
@@ -60,8 +62,9 @@ public:
         time_t now;
         ::time( &now );
         struct tm* timeinfo = ::localtime( &now );
-        std::string str = (name() + "/" + asctime(timeinfo));
-        cursed::Draw::text( this, {0,0}, str );
+        std::string timeStr = (name() + "/" + asctime(timeinfo));
+        cursed_out( "time is: " << echo_stream(timeStr) );
+        cursed::Draw::text( this, {0,0}, timeStr );
     }
 };
 
@@ -119,7 +122,8 @@ public:
     ExampleListModel() : 
         _rows{ 
             RowItem{ "I", "am", "Sparta!", "HHHH", "YYYY" },
-            RowItem{ "Et", "tu", "Brute?", "XXXX", "ZZZZ" }
+            RowItem{ "Et", "tu", "Brute?", "XXXX", "ZZZZ" },
+            RowItem{ "🌞", "🐅🐅🐅🐅🐅🐅", "🐦🐦🐦🐦🐦🐦🐦🐦", "🦖🦖🦖🦖🦖🦖🦖🦖", "🤡" }
         },
         _roleNames{ "first", "second", "third", "4th", "5th" }
     {
@@ -225,16 +229,17 @@ int main( int unused(argc), char* unused(argv[]) ){
         }
     }; 
 
-    cursed::Application app{ Direction::Horizontal, 
-        { 
-            {1, new Window{ Direction::Vertical, "leftvpanel", { 
+    IWindow* leftPanel = new Window{ Direction::Vertical, "leftvpanel", { 
                     cursed::LayoutObject{ 1, timewin1 = new TimeWindow{ Direction::Horizontal, "time1" } },
                     cursed::LayoutObject{ 1, timewin2 = new TimeWindow{ Direction::Horizontal, "time2" } },
                     cursed::LayoutObject{ 1, timewin3 = new TimeWindow{ Direction::Horizontal, "time3" } },
                     cursed::LayoutObject{ 1, button1 = new Button{ "Push Me!", Direction::Horizontal, "button1" } },
-                } } 
-            },
-            {1, rightPanel } 
+                } };
+
+    cursed::Application app{ Direction::Horizontal, 
+        { 
+            {1, leftPanel }
+           ,{1, rightPanel } 
         }
     };
 

@@ -107,7 +107,6 @@ void Button::draw( bool fullRefresh ){
         int midl = _text.length();
 
         int startx = std::max(0, midw - midl );
-        Point labelPosition{ startx, midy };
 
         Draw::text( this, {startx,midy}, _text );
     }

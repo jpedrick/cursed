@@ -45,6 +45,7 @@ public:
     static void character( IWindow* win, Point position, char data );
     static void wcharacter( IWindow* win, Point position, wchar_t data );
     static void text( IWindow* win, Point start, const char* data, size_t len );
+    //static void textLine( IWindow* win, Point start, const char* data, size_t len );
     static void text( IWindow* win, Point start, const std::string& data );
     static void printf( IWindow* win, Point start, const char* fmt, ... ) GCC_PRINTFLIKE(3,4);
 

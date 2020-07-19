@@ -74,7 +74,9 @@ IWindow* Window::childAt( const Point& p ) const{
 }
 
 Point Window::absolute( const Point& p ) const{
-    if( parent() ){ return parent()->absolute( p ) + dimensions().topLeft; }
+    if( parent() ){ 
+      return parent()->absolute( p ) + dimensions().topLeft; 
+    }
 
     return dimensions().topLeft + p;
 }

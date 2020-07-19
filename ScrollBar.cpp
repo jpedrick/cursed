@@ -54,8 +54,8 @@ namespace cursed{
         _belowValueButton->signals.released.connect([&]{ incrementValue(  _buttonIncrement ); });
 
         _valueIndicator->signals.mouseDrag.connect( [&]( Point start, Point current ){
-            int stVal = start.getPosition( layoutDirection );
-            int curVal = current.getPosition( layoutDirection );
+            int stVal = getPosition( start, layoutDirection );
+            int curVal = getPosition( current, layoutDirection );
 
             int diff = curVal - stVal;
             int size = _valueIndicator->dimensions().size.getDimension( layoutDirection )

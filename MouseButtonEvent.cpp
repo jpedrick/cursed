@@ -35,9 +35,7 @@ void MouseButtonEvent::poll(){
     MEVENT e;
     getmouse(&e); 
 
-    _position.x = e.x;
-    _position.y = e.y;
-    _position.z = e.z;
+    _position = xyz( e.x, e.y, e.z );
     _buttonState = e.bstate;
 }
 

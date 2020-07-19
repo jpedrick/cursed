@@ -34,7 +34,7 @@ namespace cursed{
 
 class Window : public IWindow{
 public:
-    Window( Direction layout = Direction::Vertical, const std::string& name = "", std::initializer_list<LayoutObject> children = {});
+    Window( Direction layout = Direction::Vertical, const std::string& name = "", std::initializer_list<LayoutObject> children = {} );
     ~Window();
 
     void setParent( IWindow* parent, int& i ) final;
@@ -76,7 +76,7 @@ protected:
     void destroyChildren();
     void destroy();
     BoxLayout& layout(){ return _layout; }
-    bool debug() const override{ return false; }
+    bool debug() const override { return false; }
     bool show() const override { return true; }
 private:
     IWindow* _parent = nullptr;

@@ -27,37 +27,37 @@
 
 inline bool contains( const cursed::Rectangle& rect, const cursed::Point& p ) {
     using namespace cursed;
-    int relx = p.x - rect.topLeft.x;
-    int rely = p.y - rect.topLeft.y;
+    Point rel = Point{p - rect.topLeft};
 
-    bool xOk = ( relx >= 0 && relx < rect.size.width );
-    bool yOk = ( rely >= 0 && rely < rect.size.height );
+    bool xOk = ( rel.x() >= 0 && rel.x() < rect.size.width );
+    bool yOk = ( rel.y() >= 0 && rel.y() < rect.size.height );
 
-    cursed_out( cprint(xOk) << cprint(yOk) << cprint(relx) << cprint(rely) << cprint(p.y) << cprint( rect.topLeft.y)  );
-
-    return xOk &&  yOk;
+    return ( xOk && yOk );
 }
 
 int main( int, char* [] ){
     using namespace cursed;
 
-    Rectangle tr{ {0,0}, { 11, 10 } };
+    Rectangle tr{ {0,0}, {11,10} };
 
     expect( tr.contains( {0,0} ) );
-    expect( !tr.contains( {-1,0} ) );
-    expect( !tr.contains( {0,-1} ) );
+    expect( !tr.contains( {-1, 0} ) );
+    expect( !tr.contains( { 0,-1} ) );
     expect( !tr.contains( {-1,-1} ) );
     expect( !tr.contains( {11,10} ) );
 
-    expect( tr.contains( {10,9} ) );
+    expect(  tr.contains( {10, 9} ) );
     expect( !tr.contains( {10,10} ) );
-    expect( !tr.contains( {11,9} ) );
+    expect( !tr.contains( {11, 9} ) );
 
     Rectangle tr2{ {0,12}, {62,13} };
 
-    cursed_out( cprint(tr2) );
-    expect( contains( tr2, {29,6} ) );
-    expect( tr2.contains( {29,6} ) );
+    expect_equal( contains(tr2, {29,18} ), tr2.contains({29,18}) );
+    expect_equal( contains(tr2, {29,6} ), tr2.contains( {29,6} ) );
+    expect_equal( contains(tr2,{-1,18} ), tr2.contains( {-1,18}) );
+    expect_equal( contains(tr2,{-1,11} ), tr2.contains( {-1,11}) );
+    expect_equal( contains(tr2,{63,18} ), tr2.contains( {63,18}) );
+    expect_equal( contains(tr2,{1,26} ),  tr2.contains( {1,26} ) );
 
     return 0;
 }

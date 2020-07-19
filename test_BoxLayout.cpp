@@ -45,15 +45,13 @@ int main( int argc, char* [] ){
         } 
     };
 
-    testLayout.onAllocationChanged( Rectangle{ Point{0,0,0}, Size{ 2, 1 } } );
+    testLayout.onAllocationChanged( Rectangle{ xyz(0,0,0), Size{ 2, 1 } } );
 
-    expect( win1.dimensions().topLeft.x == 0 );
-    expect( win1.dimensions().topLeft.y == 0 );
+    expect( win1.dimensions().topLeft == xyz(0,0) );
     expect( win1.dimensions().size.width == 1 );
     expect( win1.dimensions().size.height == 1 );
 
-    expect( win2.dimensions().topLeft.x == 1 );
-    expect( win2.dimensions().topLeft.y == 0 );
+    expect( win2.dimensions().topLeft == xyz(1,0) );
     expect( win2.dimensions().size.width == 1 );
     expect( win2.dimensions().size.height == 1 );
 
@@ -61,15 +59,13 @@ int main( int argc, char* [] ){
     testLayout.remove( &win2 );
     testLayout.clear();
     
-    testLayout.onAllocationChanged( Rectangle{ Point{1,1,0}, Size{ 3, 2 } } );
+    testLayout.onAllocationChanged( Rectangle{ xyz(1,1,0), Size{ 3, 2 } } );
 
-    expect( win1.dimensions().topLeft.x == 1 );
-    expect( win1.dimensions().topLeft.y == 1 );
+    expect( win1.dimensions().topLeft == xyz(1,1) );
     expect( win1.dimensions().size.width == 1 );
     expect( win1.dimensions().size.height == 2 );
 
-    expect( win2.dimensions().topLeft.x == 2 );
-    expect( win2.dimensions().topLeft.y == 1 );
+    expect( win2.dimensions().topLeft == xyz(2,1) );
     expect( win2.dimensions().size.width == 2 );
     expect( win2.dimensions().size.height == 2 );
 
