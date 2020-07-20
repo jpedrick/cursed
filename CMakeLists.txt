@@ -13,9 +13,9 @@ include( CTest )
 #find_package(Curses REQUIRED)
 list( APPEND DEPENDENCIES rt  dl anl pthread z ncursesw )
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread -std=c++11 -Wpedantic -Wuninitialized -Wmissing-field-initializers -Werror -ftrack-macro-expansion=0")
-set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -pthread -std=c++11")
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pthread -std=c++11")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread -std=c++17 -Wpedantic -Wuninitialized -Wmissing-field-initializers -Werror -ftrack-macro-expansion=0")
+set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -pthread -std=c++17")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pthread -std=c++17")
 
 set(TEMPLATE lib)
 set(TARGET cursed)

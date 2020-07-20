@@ -50,7 +50,7 @@ public:
     TimeWindow( Args&&... args ) : 
         Window( std::forward<Args>(args)... )
     { 
-        setSizeLimits( cursed::SizeLimits{ {1,1}, {std::numeric_limits<int>::max(), 1} } );
+        setSizeLimits( cursed::SizeLimits{ {1,3}, {std::numeric_limits<int>::max(), 3} } );
     }
 
     void onTimeout(){
@@ -60,9 +60,9 @@ public:
         time_t now;
         ::time( &now );
         struct tm* timeinfo = ::localtime( &now );
-        std::string str = (name() + "/" + asctime(timeinfo));
+        std::string str = (name() + ": " + asctime(timeinfo) + "as_int:" + std::to_string( now ) + "\nand some more words on a new line");
 
-        cursed::Draw::text( this, {0,0}, str.erase( str.find_last_not_of("\n") + 1 ) );
+        cursed::Draw::text( this, {0,0}, str );
     }
 };
 

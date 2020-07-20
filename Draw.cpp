@@ -23,6 +23,7 @@
 //  You should also have received a copy of the GNU Affero General Public License
 //  along with Cursed.  If not, see <https://www.gnu.org/licenses/>.
 #include "Draw.hpp"
+#include <memory>
 
 namespace cursed{
 
@@ -123,7 +124,7 @@ void Draw::character( IWindow* win, Point position, char data ){
     }
 }
 
-void Draw::text( IWindow* win, Point start, const char* data, size_t len ){
+void Draw::textLine( IWindow* win, Point start, const char* data, size_t len ){
     Point p = win->absolute( start );
 
     len = strnlen( data, len );
@@ -138,6 +139,26 @@ void Draw::text( IWindow* win, Point start, const char* data, size_t len ){
 
     if( dim.containsRelative(start) && displayLen > 0 ){
         mvwaddnstr( win->window(), p.y, p.x, data, displayLen );
+    }
+}
+
+void Draw::text( IWindow* win, Point start, const char* data, size_t len ){
+    cursed_out( "writing text: " << cprint(data) << " " << cprint(start) );
+
+    auto buffer = std::make_unique<char[]>(len);
+    strncpy( buffer.get(), data, len );
+    char* remaining = buffer.get();
+
+    char* token = nullptr;
+    Point pos = start;
+    while( ( token = strtok_r( remaining, "\n", &remaining ) ) ){
+        size_t tokLen = strlen(token);
+        cursed_out( "writing token: : " << cprint(token) << " " << cprint(pos) );
+        if ( token[tokLen] == '\n' ){
+            token[tokLen] = '\0';
+        }
+        textLine( win, pos, token, strlen(token) ); 
+        pos.y += 1;
     }
 }
 
