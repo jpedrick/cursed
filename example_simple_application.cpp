@@ -61,7 +61,8 @@ public:
         ::time( &now );
         struct tm* timeinfo = ::localtime( &now );
         std::string str = (name() + "/" + asctime(timeinfo));
-        cursed::Draw::text( this, {0,0}, str );
+
+        cursed::Draw::text( this, {0,0}, str.erase( str.find_last_not_of("\n") + 1 ) );
     }
 };
 
