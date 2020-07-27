@@ -22,25 +22,20 @@ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pthread -std=c++17")
 set(TEMPLATE lib)
 set(TARGET cursed)
 
-exec_program( git ls-files *.cpp
-             OUTPUT_VARIABLE GIT_CPPS)
-message( git cpps: ${GIT_CPPS} )         
+#exec_program( git ls-files *.cpp OUTPUT_VARIABLE GIT_CPPS)
+#message( "git cpps: ${GIT_CPPS}" )         
 
 file( GLOB HEADERS *.hpp )
-file( GLOB SOURCES *.cpp )
+file( GLOB_RECURSE SOURCES *.cpp )
+
 
 foreach( src ${SOURCES} )
     get_filename_component(base_src ${src} NAME )
-    if( ${base_src} MATCHES "^test_.*\.cpp$" )
-        list(APPEND TEST_SOURCES ${src} )
-        list(REMOVE_ITEM SOURCES ${src} )
-    endif()
-endforeach(src)
-
-foreach( src ${SOURCES} )
-    get_filename_component(base_src ${src} NAME )
-    if( ${base_src} MATCHES "^example_.*\.cpp$" )
+    if( ${base_src} MATCHES "^example_.*\.cpp$" ) # examples
         list(APPEND EXAMPLE_SOURCES ${src} )
+        list(REMOVE_ITEM SOURCES ${src} )
+    elseif( ${base_src} MATCHES "^test_.*\.cpp$" ) # tests
+        list(APPEND TEST_SOURCES ${src} )
         list(REMOVE_ITEM SOURCES ${src} )
     endif()
 endforeach(src)
@@ -59,6 +54,7 @@ if( TEST_SOURCES )
 
         add_executable( ${TEST_EXECUTABLE} ${test_source} )
         target_link_libraries( ${TEST_EXECUTABLE} ${TARGET} ${TEST_DEPENDENCIES} ${DEPENDENCIES} )
+        target_include_directories( ${TEST_EXECUTABLE} PRIVATE ${CMAKE_SOURCE_DIR} )
         add_test( ${TEST_EXECUTABLE} ${TEST_EXECUTABLE} )
     endforeach(test_source)
 endif()
@@ -71,5 +67,6 @@ if( EXAMPLE_SOURCES )
 
         add_executable( ${EXAMPLE_EXECUTABLE} ${example_source} )
         target_link_libraries( ${EXAMPLE_EXECUTABLE} ${TARGET} ${EXAMPLE_DEPENDENCIES} ${DEPENDENCIES} )
+        target_include_directories( ${EXAMPLE_EXECUTABLE} PRIVATE ${CMAKE_SOURCE_DIR} )
     endforeach(example_source)
 endif()

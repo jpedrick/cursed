@@ -1,8 +1,10 @@
 BUILD=Release
 BRANCH_NAME=$(shell git rev-parse --symbolic-full-name --abbrev-ref @{u} )
 DIRNAME=${shell basename $(CURDIR) }
+DISTRIB_CODENAME=${shell lsb_release -cs}
 
 USE_MAKE=
+J=${shell nproc}
 
 ifdef USE_MAKE
 BUILD_DIR=../build-${DIRNAME}-${DISTRIB_CODENAME}-${BRANCH_NAME}-${BUILD}-make
@@ -18,7 +20,6 @@ GENERATOR=Ninja
 BUILD_FILE=build.ninja
 endif
 
-J=6
 THREADS=${J}
 BUILDER_ARGS=
 
@@ -40,7 +41,7 @@ debug:
 build-${BUILD}: ${BUILD_DIR}/${BUILD_FILE}
 
 ${BUILD_DIR}/${BUILD_FILE}:
-	${CMAKE} -G "${GENERATOR}" -H${CURDIR} -DCMAKE_BUILD_TYPE=${BUILD} -DATHENA_ROOT=${HOME}/athena/husky -B${BUILD_DIR}
+	${CMAKE} -j${THREADS} -G "${GENERATOR}" -H${CURDIR} -DCMAKE_BUILD_TYPE=${BUILD} -B${BUILD_DIR}
 
 clean:
 	${BUILDER} -C ${BUILD_DIR} clean
