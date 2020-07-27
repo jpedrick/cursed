@@ -7,11 +7,13 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
 project( cursed CXX )
 include( CTest )
 
+find_package(ICU 61.0 COMPONENTS io i18n uc REQUIRED )
+
 #set(CURSES_NEED_NCURSES true)
 #set(CURSES_NEED_WIDE    true)
 
 #find_package(Curses REQUIRED)
-list( APPEND DEPENDENCIES rt  dl anl pthread z ncursesw )
+list( APPEND DEPENDENCIES rt  dl anl pthread z ncursesw ICU::uc )
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread -std=c++17 -Wpedantic -Wuninitialized -Wmissing-field-initializers -Werror -ftrack-macro-expansion=0")
 set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -pthread -std=c++17")

@@ -127,6 +127,8 @@ void Draw::character( IWindow* win, Point position, char data ){
 }
 
 void Draw::textLine( IWindow* win, Point start, const icu::UnicodeString& str ){
+    std::string ustr;
+    str.toUTF8String( ustr );
     Point p = win->absolute( start );
 
     auto len = str.length();
@@ -143,8 +145,6 @@ void Draw::textLine( IWindow* win, Point start, const icu::UnicodeString& str ){
     std::string utf8;
     str.tempSubString(0, str.moveIndex32(0,displayLen) ).toUTF8String( utf8 );
 
-    cursed_out( cprint(utf8) << " " << cprint(displayLen) << " " << cprint(requiredSize) << " " << cprint(start.x) << " " << cprint(dim.size.width) );
-
     if( dim.containsRelative(start) && displayLen > 0 ){
         mvwaddnstr( win->window(), p.y, p.x, utf8.c_str(), utf8.size() );
     }
@@ -153,8 +153,6 @@ void Draw::textLine( IWindow* win, Point start, const icu::UnicodeString& str ){
 void Draw::text( IWindow* win, Point start, const char* data, size_t len ){
     // assume unicode
     auto ustr = icu::UnicodeString::fromUTF8( data );
-
-    cursed_out( cprint(ustr.countChar32()) << " " << cprint(data) );
 
     auto buffer = std::make_unique<char[]>(len);
     strncpy( buffer.get(), data, len );
@@ -170,8 +168,8 @@ void Draw::text( IWindow* win, Point start, const char* data, size_t len ){
             cur = -1; // exit the loop
         } else {
             textLine( win, pos, ustr.tempSubStringBetween(cur, next) ); 
-            cur = next; // next != -1, so will loop again
-            next = ustr.indexOf("\n", next + 1);
+            cur = ustr.moveIndex32(next, 1);
+            next = ustr.indexOf("\n", ustr.moveIndex32(next, 1) );
         }
         pos.y += 1;
     }while( cur != -1 );

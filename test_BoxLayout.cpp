@@ -36,42 +36,82 @@ int main( int argc, char* [] ){
 
     cursed_out( cprint(argc) );
 
-    Window win1, win2;
+    {
+        Window win1, win2;
 
-    BoxLayout testLayout{ Direction::Horizontal, 
-        {
-            {1, &win1}, 
-            {1, &win2}
-        } 
-    };
+        BoxLayout testLayout{ Direction::Horizontal, 
+            {
+                {1, &win1}, 
+                {1, &win2}
+            } 
+        };
 
-    testLayout.onAllocationChanged( Rectangle{ Point{0,0,0}, Size{ 2, 1 } } );
+        testLayout.onAllocationChanged( Rectangle{ Point{0,0,0}, Size{ 2, 1 } } );
 
-    expect( win1.dimensions().topLeft.x == 0 );
-    expect( win1.dimensions().topLeft.y == 0 );
-    expect( win1.dimensions().size.width == 1 );
-    expect( win1.dimensions().size.height == 1 );
+        expect_equal( win1.dimensions().topLeft.x, 0 );
+        expect_equal( win1.dimensions().topLeft.y, 0 );
+        expect_equal( win1.dimensions().size.width, 1 );
+        expect_equal( win1.dimensions().size.height, 1 );
 
-    expect( win2.dimensions().topLeft.x == 1 );
-    expect( win2.dimensions().topLeft.y == 0 );
-    expect( win2.dimensions().size.width == 1 );
-    expect( win2.dimensions().size.height == 1 );
+        expect_equal( win2.dimensions().topLeft.x , 1 );
+        expect_equal( win2.dimensions().topLeft.y , 0 );
+        expect_equal( win2.dimensions().size.width , 1 );
+        expect_equal( win2.dimensions().size.height , 1 );
 
-    testLayout.remove( &win1 );
-    testLayout.remove( &win2 );
-    testLayout.clear();
-    
-    testLayout.onAllocationChanged( Rectangle{ Point{1,1,0}, Size{ 3, 2 } } );
+        testLayout.remove( &win1 );
+        testLayout.remove( &win2 );
+        testLayout.clear();
+        
+        testLayout.onAllocationChanged( Rectangle{ Point{1,1,0}, Size{ 3, 2 } } );
 
-    expect( win1.dimensions().topLeft.x == 1 );
-    expect( win1.dimensions().topLeft.y == 1 );
-    expect( win1.dimensions().size.width == 1 );
-    expect( win1.dimensions().size.height == 2 );
+        // These have been removed, so their dimensions won't change
+        expect_equal( win1.dimensions().topLeft.x, 0 );
+        expect_equal( win1.dimensions().topLeft.y, 0 );
+        expect_equal( win1.dimensions().size.width, 1 );
+        expect_equal( win1.dimensions().size.height, 1 );
 
-    expect( win2.dimensions().topLeft.x == 2 );
-    expect( win2.dimensions().topLeft.y == 1 );
-    expect( win2.dimensions().size.width == 2 );
-    expect( win2.dimensions().size.height == 2 );
+        expect_equal( win2.dimensions().topLeft.x , 1 );
+        expect_equal( win2.dimensions().topLeft.y , 0 );
+        expect_equal( win2.dimensions().size.width , 1 );
+        expect_equal( win2.dimensions().size.height , 1 );
+    }
+
+    {
+        Window win1, win2;
+
+        BoxLayout testLayout{ Direction::Horizontal, 
+            {
+                {1, &win1}, 
+                {1, &win2}
+            } 
+        };
+
+        testLayout.onAllocationChanged( Rectangle{ Point{0,0,0}, Size{ 2, 1 } } );
+
+        expect_equal( win1.dimensions().topLeft.x, 0 );
+        expect_equal( win1.dimensions().topLeft.y, 0 );
+        expect_equal( win1.dimensions().size.width, 1 );
+        expect_equal( win1.dimensions().size.height, 1 );
+
+        expect_equal( win2.dimensions().topLeft.x , 1 );
+        expect_equal( win2.dimensions().topLeft.y , 0 );
+        expect_equal( win2.dimensions().size.width , 1 );
+        expect_equal( win2.dimensions().size.height , 1 );
+        
+        testLayout.onAllocationChanged( Rectangle{ Point{1,1,0}, Size{ 4, 2 } } );
+
+        // These have been removed, so their dimensions won't change
+        expect_equal( win1.dimensions().topLeft.x, 1 );
+        expect_equal( win1.dimensions().topLeft.y, 1 );
+        expect_equal( win1.dimensions().size.width, 2 );
+        expect_equal( win1.dimensions().size.height, 1 );
+
+        expect_equal( win2.dimensions().topLeft.x , 2 );
+        expect_equal( win2.dimensions().topLeft.y , 1 );
+        expect_equal( win2.dimensions().size.width , 2 );
+        expect_equal( win2.dimensions().size.height , 1 );
+    }
+
 
     return 0;
 }

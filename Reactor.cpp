@@ -51,8 +51,8 @@ void Reactor::poll(){
 
     int n = 0;
     struct timeval timeout;
-    timeout.tv_sec = 1;
-    timeout.tv_usec = 0;
+    timeout.tv_sec = 0;
+    timeout.tv_usec = 100000;
     n = ::select( maxFd + 1, &fdset, NULL, NULL, &timeout);
     if( n > 0 ){
         for( size_t i = 0; i < _eventHandlers.size(); ++i ){

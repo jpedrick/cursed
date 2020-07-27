@@ -33,4 +33,11 @@ namespace cursed{
     }\
 }
 
+#define expect_equal( EXPECTED_VALUE, ACTUAL_VALUE ) { \
+    bool testResult = ( EXPECTED_VALUE == ACTUAL_VALUE ); \
+    if( !testResult ){ \
+        cursed_out( #EXPECTED_VALUE << ":" << EXPECTED_VALUE << " == " << #ACTUAL_VALUE << ":" << ACTUAL_VALUE << " false" ); \
+    }\
+}
+
 }

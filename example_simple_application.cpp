@@ -62,7 +62,7 @@ public:
         time_t now;
         ::time( &now );
         struct tm* timeinfo = ::localtime( &now );
-        std::string str = (name() + ": " + asctime(timeinfo) + "as_int:" + std::to_string( now ) + "\nand some more words on a new line");
+        std::string str = (name() + ": " + asctime(timeinfo) + "as_int:" + std::to_string( now ) );
 
         cursed::Draw::text( this, {0,0}, str );
     }
