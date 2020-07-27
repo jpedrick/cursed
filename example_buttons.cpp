@@ -76,8 +76,8 @@ int main( int __attribute__((unused))argc, char* __attribute__((unused))argv[] )
         SizeLimits limits = hscroller->sizeLimits();
         limits.minimum.height = 1;
         hscroller->setSizeLimits( limits );
-        hscroller->setMaxValue(20);
         hscroller->setValue(0);
+        hscroller->setMaxValue(20);
         hscroller->setButtonIncrement(4);
     }
 
@@ -85,8 +85,8 @@ int main( int __attribute__((unused))argc, char* __attribute__((unused))argv[] )
         SizeLimits limits = hscroller->sizeLimits();
         limits.minimum.width = 1;
         vscroller->setSizeLimits( limits );
-        vscroller->setMaxValue(200);
         vscroller->setValue(0);
+        vscroller->setMaxValue(200);
         vscroller->setButtonIncrement(20);
     }
 
@@ -167,7 +167,7 @@ int main( int __attribute__((unused))argc, char* __attribute__((unused))argv[] )
 
     vscroller->signals.valueChanged.connect([&]( ScrollBar::NewValue newVal, ScrollBar::OldValue oldVal ){
         std::stringstream ss;
-        ss << "vertical scrollbar value changed " << cprint(newVal) << cprint(oldVal) << cprint(hscroller->maxValue());
+        ss << "vertical scrollbar value changed " << cprint(newVal) << cprint(oldVal) << cprint(vscroller->maxValue());
         label->setText( ss.str() );
     });
 

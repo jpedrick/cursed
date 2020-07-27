@@ -36,6 +36,7 @@ namespace cursed{
 
         return "🡇";
     }
+
     std::string decreasingArrow( Direction dir ){
         if( dir == Direction::Horizontal ){
             return "🡄";
@@ -43,6 +44,7 @@ namespace cursed{
 
         return "🡅";
     }
+
     ScrollBar::ScrollBar( Direction layoutDirection , const std::string& name ) : 
         Window( layoutDirection, name, {
                 {1, _decreaseButton    = new Button( decreasingArrow(layoutDirection) ) },
@@ -63,17 +65,21 @@ namespace cursed{
 
         constexpr int actionButton = 1;
 
-        _decreaseButton->signals.clicked.connect([&]( int mouseButton ){ 
+        auto decreaseValue = [&]( int ){
             cursed_out( "clicked decrease button: " << cprint(name) );
             incrementValue(-1); 
-        } );
-        _increaseButton->signals.clicked.connect([&]( int mouseButton ){ 
+        };
+        auto increaseValue = [&]( int ){
             cursed_out( "clicked increase button: " << cprint(name) );
             incrementValue(1); 
-        } );
+        };
+        _decreaseButton->signals.clicked.connect( decreaseValue );
+        _decreaseButton->signals.released.connect( decreaseValue );
+
+        _increaseButton->signals.clicked.connect( increaseValue );
+        _increaseButton->signals.released.connect( increaseValue );
 
         _aboveValueButton->signals.clicked.connect([&]( int mouseButton ){ incrementValue( -_buttonIncrement ); }, {actionButton} );
-
         _belowValueButton->signals.clicked.connect([&]( int mouseButton ){ incrementValue(  _buttonIncrement ); }, {actionButton} );
 
         _valueIndicator->signals.mouseDrag.connect( [&]( Point start, Point current ){
@@ -90,8 +96,8 @@ namespace cursed{
         } );
         {
             SizeLimits limits = _valueIndicator->sizeLimits();
-            limits.minimum.width = 1;
-            limits.minimum.height = 1;
+            limits.minimum.width = 2;
+            limits.minimum.height = 2;
             limits.maximum.getDimension( layoutDirection ) = 1000;
             _valueIndicator->setSizeLimits( limits );
         }
@@ -112,8 +118,8 @@ namespace cursed{
         update();
     }
 
-    void ScrollBar::update(){
-        if( _value != _aboveValueButton->layoutRatio() || _belowValueButton->layoutRatio() != (_maxValue - _value) ){
+    void ScrollBar::update( bool force ){
+        if( _value != _aboveValueButton->layoutRatio() || _belowValueButton->layoutRatio() != (_maxValue - _value) || force ){
             _aboveValueButton->setLayoutRatio( _value );
             _belowValueButton->setLayoutRatio( _maxValue - _value );
 
@@ -155,7 +161,9 @@ namespace cursed{
     void ScrollBar::setMaxValue( int64_t newMax ) { 
         int oldValue = _maxValue;
         _maxValue = std::max(0L, newMax ); 
-        if( _maxValue != oldValue ) update();
+        if( _maxValue != oldValue ){
+            update( true );
+        }
     }
 
     void ScrollBar::setIndicatorColors( unsigned long normal, unsigned long pressed ){

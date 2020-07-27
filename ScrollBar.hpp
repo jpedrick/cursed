@@ -42,7 +42,6 @@ public:
 
     ScrollBar( Direction layout, const std::string& name = "" );
 
-//    void draw( bool fullRefresh ) override;
     int64_t setValue( int64_t v );
     void setMaxValue( int64_t v );
     int64_t incrementValue( int64_t change );
@@ -51,7 +50,7 @@ public:
     int64_t maxValue() const{ return _maxValue; }
     double percent() const { return (double)_value / (double)_maxValue; }
 
-    void update();
+    void update( bool force = true );
     void setButtonIncrement( int v ) { _buttonIncrement = v; }
     void setButtonColors( unsigned long normal, unsigned long pressed );
     void setIndicatorColors( unsigned long normal, unsigned long pressed );
