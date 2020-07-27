@@ -30,11 +30,13 @@
 #include "Button.hpp"
 #include "Label.hpp"
 #include "ScrollBar.hpp"
-
+#include <fstream>
 
 int main( int __attribute__((unused))argc, char* __attribute__((unused))argv[] ){
     using namespace cursed;
     ::setlocale(LC_ALL, "");
+    cursed::Log::setOutputStream( new std::ofstream("test_example_buttons.txt") );
+    cursed_out( "running application: " << cprint(argv[0]) );
 
     Button* b1 = nullptr;
     Button* b2 = nullptr;
@@ -45,17 +47,17 @@ int main( int __attribute__((unused))argc, char* __attribute__((unused))argv[] )
     ScrollBar* vscroller = nullptr;
     Application app{ Direction::Vertical, {
         { 0, label = new Label{ "some text for a label" } }, 
-        { 0, hscroller = new ScrollBar{ Direction::Horizontal } }, 
-        { 1, new Window{ 
+        { 1, hscroller = new ScrollBar{ Direction::Horizontal, "horizontal-scroll" } }, 
+        { 10, new Window{ 
             Direction::Horizontal, "button-window",
             { 
-                {0, vscroller = new ScrollBar{ Direction::Vertical} }, 
-                {1, new Window{ Direction::Vertical, "leftvpanel", { 
+                {1, vscroller = new ScrollBar{ Direction::Vertical, "vertical-scroll" } }, 
+                {5, new Window{ Direction::Vertical, "leftvpanel", { 
                         { 1, b1 = new Button{ "b1", Direction::Horizontal, "b1" } },
                         { 1, b2 = new Button{ "b2", Direction::Horizontal, "b2" } }
                     } } 
                 },
-                {1, new Window{ Direction::Vertical, "leftvpanel", { 
+                {5, new Window{ Direction::Vertical, "leftvpanel", { 
                         { 1, b3 = new Button{ "b3", Direction::Horizontal, "b3" } },
                         { 1, b4 = new Button{ "b4", Direction::Horizontal, "b4" } }
                     } } 
@@ -99,7 +101,8 @@ int main( int __attribute__((unused))argc, char* __attribute__((unused))argv[] )
     b4->setSizeLimits( SizeLimits::unlimited() );
 
     const cursed::Color red    = {1000,    0 ,   0 };
-    const cursed::Color green  = {   0, 1000 ,   0 };
+    const cursed::Color mutedGreen  = {   250, 500, 300 };
+    const cursed::Color darkGreen  = {   0, 500 ,   0 };
     const cursed::Color blue   = {   0,    0 ,1000 };
     const cursed::Color darkblue  = {   0,    0 ,200 };
     const cursed::Color yellow = {  600, 600 ,   0 };
@@ -111,13 +114,13 @@ int main( int __attribute__((unused))argc, char* __attribute__((unused))argv[] )
     cursed::ColorPair labelColor{ bluegrey, darkblue };
     label->setColor( labelColor );
 
-    cursed::ColorPair scrollButtonsNormal{ bluewhite, yellow };
+    cursed::ColorPair scrollButtonsNormal{ mutedGreen, darkGreen };
     cursed::ColorPair scrollButtonsPressed{ yellow, bluewhite };
     hscroller->setButtonColors( scrollButtonsNormal, scrollButtonsPressed );
     vscroller->setButtonColors( scrollButtonsNormal, scrollButtonsPressed );
 
     cursed::ColorPair indicatorNormal{ red, yellow };
-    cursed::ColorPair indicatorPressed{ blue, green };
+    cursed::ColorPair indicatorPressed{ blue, mutedGreen };
     hscroller->setIndicatorColors( indicatorNormal, indicatorPressed );
     vscroller->setIndicatorColors( indicatorNormal, indicatorPressed );
 
@@ -129,8 +132,8 @@ int main( int __attribute__((unused))argc, char* __attribute__((unused))argv[] )
     cursed::ColorPair b2Pressed{ yellow, red };
     b2->setColors(b2Normal, b2Pressed);
 
-    cursed::ColorPair b3Normal{ blue, green };
-    cursed::ColorPair b3Pressed{ green, blue };
+    cursed::ColorPair b3Normal{ blue, mutedGreen };
+    cursed::ColorPair b3Pressed{ mutedGreen, blue };
     b3->setColors(b3Normal, b3Pressed);
 
     cursed::ColorPair b4Normal{ yellow , blue };

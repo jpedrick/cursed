@@ -25,15 +25,31 @@
 #include "ScrollBar.hpp"
 #include "Button.hpp"
 #include "UTF.hpp"
+#include "Log.hpp"
+#include "Forward.hpp"
 
 namespace cursed{
+    std::string increasingArrow( Direction dir ){
+        if( dir == Direction::Horizontal ){
+            return "🡆";
+        }
+
+        return "🡇";
+    }
+    std::string decreasingArrow( Direction dir ){
+        if( dir == Direction::Horizontal ){
+            return "🡄";
+        }
+
+        return "🡅";
+    }
     ScrollBar::ScrollBar( Direction layoutDirection , const std::string& name ) : 
-        MouseEventWindow( layoutDirection, name, {
-                {1, _decreaseButton    = new Button(UTF16::blackArrow[(int)UTF16::BlackArrow::DownLeft ])},
+        Window( layoutDirection, name, {
+                {1, _decreaseButton    = new Button( decreasingArrow(layoutDirection) ) },
                 {1, _aboveValueButton  = new Button("")},
                 {1, _valueIndicator    = new Button("")},
                 {1, _belowValueButton  = new Button("")},
-                {1, _increaseButton    = new Button(UTF16::blackArrow[(int)UTF16::BlackArrow::UpRight ])}
+                {1, _increaseButton    = new Button( increasingArrow(layoutDirection) ) }
         } ),
         _layoutDirection( layoutDirection )
     { 
@@ -47,13 +63,18 @@ namespace cursed{
 
         constexpr int actionButton = 1;
 
-        _decreaseButton->signals.released.connect([&]( int mouseButton ){ incrementValue( -1); }, {actionButton} );
+        _decreaseButton->signals.clicked.connect([&]( int mouseButton ){ 
+            cursed_out( "clicked decrease button: " << cprint(name) );
+            incrementValue(-1); 
+        } );
+        _increaseButton->signals.clicked.connect([&]( int mouseButton ){ 
+            cursed_out( "clicked increase button: " << cprint(name) );
+            incrementValue(1); 
+        } );
 
-        _increaseButton->signals.released.connect([&]( int mouseButton ){ incrementValue( 1); }, {actionButton} );
+        _aboveValueButton->signals.clicked.connect([&]( int mouseButton ){ incrementValue( -_buttonIncrement ); }, {actionButton} );
 
-        _aboveValueButton->signals.released.connect([&]( int mouseButton ){ incrementValue( -_buttonIncrement ); }, {actionButton} );
-
-        _belowValueButton->signals.released.connect([&]( int mouseButton ){ incrementValue(  _buttonIncrement ); }, {actionButton} );
+        _belowValueButton->signals.clicked.connect([&]( int mouseButton ){ incrementValue(  _buttonIncrement ); }, {actionButton} );
 
         _valueIndicator->signals.mouseDrag.connect( [&]( Point start, Point current ){
             int stVal = start.getPosition( layoutDirection );
@@ -76,14 +97,14 @@ namespace cursed{
         }
         {
             SizeLimits limits = _decreaseButton->sizeLimits();
-            limits.minimum.width = 1;
+            limits.minimum.width = 3;
             limits.minimum.height = 1;
             limits.maximum.getDimension( layoutDirection ) = 1;
             _decreaseButton->setSizeLimits( limits);
         }
         {
             SizeLimits limits = _increaseButton->sizeLimits();
-            limits.minimum.width = 1;
+            limits.minimum.width = 3;
             limits.minimum.height = 1;
             limits.maximum.getDimension( layoutDirection ) = 1;
             _increaseButton->setSizeLimits( limits );
@@ -142,6 +163,7 @@ namespace cursed{
         _aboveValueButton->setColors( pressed, normal );
         _belowValueButton->setColors( pressed, normal );
     }
+
     void ScrollBar::setButtonColors( unsigned long normal, unsigned long pressed ){
         _decreaseButton->setColors( normal, pressed );
         _increaseButton->setColors( normal, pressed );

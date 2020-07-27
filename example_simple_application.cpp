@@ -214,7 +214,7 @@ private:
 int main( int unused(argc), char* unused(argv[]) ){
     using namespace cursed;
 
-    cursed::Log::setOutputStream( new std::ofstream("test_app_log.txt") );
+    cursed::Log::setOutputStream( new std::ofstream("test_example_simple_application_log.txt") );
     cursed_out( "running application: " << cprint(argv[0]) );
 
     IWindow* gridwin = nullptr;

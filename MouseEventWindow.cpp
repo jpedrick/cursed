@@ -56,9 +56,9 @@ void MouseEventWindow::onMouseInput( const Point& relative, MouseButtonEvent& e 
     bool pressed[ _buttons.size() ] = { false };
     bool released[ _buttons.size() ] = { false };
     for ( auto button : _buttons ){
-        bool clicked  = e.mouseKeyEvent( 1, MouseButtonEventType::Clicked );
-        bool clicked2 = e.mouseKeyEvent( 1, MouseButtonEventType::DoubleClicked );
-        bool clicked3 = e.mouseKeyEvent( 1, MouseButtonEventType::TripleClicked );
+        bool clicked  = e.mouseKeyEvent( button, MouseButtonEventType::Clicked );
+        bool clicked2 = e.mouseKeyEvent( button, MouseButtonEventType::DoubleClicked );
+        bool clicked3 = e.mouseKeyEvent( button, MouseButtonEventType::TripleClicked );
 
         pressed[button]  = e.mouseKeyEvent( button, MouseButtonEventType::Pressed );
         released[button] = _pressed[button] && !pressed[button] ? true : false;

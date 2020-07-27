@@ -38,14 +38,14 @@ class IFileEventHandler;
 
 }
 
-#define cprint( XX ) #XX << ":" << XX << " "
-#define cursed_out( OUTPUT ) ( cursed::Log::instance() << OUTPUT << "[" << __FILE__ << ":" << __LINE__ << "][" << __func__ << "]"  ).endl();
-#define cursed_echo( COMMAND, OUTPUT ) { ( cursed::Log::instance() << #COMMAND << "[" << OUTPUT << "]" << "[" << __FILE__ << ":" << __LINE__ << "][" << __func__ << "]"  ).endl();} COMMAND
+#define cprint( __expression__ ) " " << #__expression__ << ":" << __expression__
+#define cursed_out( __stream_expression__ ) ( ::cursed::Log::instance() << __stream_expression__ << "\t[" << __FILE__ << ":" << __LINE__ << "][" << __func__ << "]"  ).endl();
+#define cursed_echo( COMMAND, OUTPUT ) { ( ::cursed::Log::instance() << #COMMAND << "[" << OUTPUT << "]" << "[" << __FILE__ << ":" << __LINE__ << "][" << __func__ << "]"  ).endl();} COMMAND
 #define cursed_throw( DESCRIPTION ) { std::stringstream ss; ss << DESCRIPTION << "[" << __FILE__ << ":" << __LINE__ << "][" << __func__ << "]"; throw std::runtime_error( ss.str() ); }
 #define cursed_assert( TRUE_STATEMENT, DESCRIPTION ) if( !(TRUE_STATEMENT) ){ cursed_out(DESCRIPTION); cursed_throw(DESCRIPTION); }
-#define cursed_system_expect( QQQ ){ \
-    if( QQQ ){ char errbuf[256]; \
-        cursed_throw( cprint(#QQQ) << cprint(strerror_r(errno, errbuf, sizeof(errbuf))) ); \
+#define cursed_system_expect( __expression__ ){ \
+    if( __expression__ ){ char errbuf[256]; \
+        cursed_throw( cprint(#__expression__) << cprint(strerror_r(errno, errbuf, sizeof(errbuf))) ); \
     }\
 }
 

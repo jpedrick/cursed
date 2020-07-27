@@ -30,7 +30,7 @@
 namespace cursed{
 class Button;
 
-class ScrollBar : public MouseEventWindow{
+class ScrollBar : public Window{
 public:
     typedef int64_t NewValue;
     typedef int64_t OldValue;
@@ -60,6 +60,10 @@ public:
     bool show() const override{ return _show; }
 
     void refreshDimensions() override;
+
+    Button& increaseButton();
+    Button& decreaseButton();
+
 private:
     Button* _decreaseButton;
     Button* _aboveValueButton;
