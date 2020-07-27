@@ -28,7 +28,7 @@
 
 namespace cursed{
     ScrollBar::ScrollBar( Direction layoutDirection , const std::string& name ) : 
-        Window( layoutDirection, name, {
+        MouseEventWindow( layoutDirection, name, {
                 {1, _decreaseButton    = new Button(UTF16::blackArrow[(int)UTF16::BlackArrow::DownLeft ])},
                 {1, _aboveValueButton  = new Button("")},
                 {1, _valueIndicator    = new Button("")},
@@ -45,13 +45,15 @@ namespace cursed{
             setSizeLimits( limits );
         }
 
-        _decreaseButton->signals.released.connect([&]{ incrementValue( -1); });
+        constexpr int actionButton = 1;
 
-        _increaseButton->signals.released.connect([&]{ incrementValue( 1); });
+        _decreaseButton->signals.released.connect([&]( int mouseButton ){ incrementValue( -1); }, {actionButton} );
 
-        _aboveValueButton->signals.released.connect([&]{ incrementValue( -_buttonIncrement ); });
+        _increaseButton->signals.released.connect([&]( int mouseButton ){ incrementValue( 1); }, {actionButton} );
 
-        _belowValueButton->signals.released.connect([&]{ incrementValue(  _buttonIncrement ); });
+        _aboveValueButton->signals.released.connect([&]( int mouseButton ){ incrementValue( -_buttonIncrement ); }, {actionButton} );
+
+        _belowValueButton->signals.released.connect([&]( int mouseButton ){ incrementValue(  _buttonIncrement ); }, {actionButton} );
 
         _valueIndicator->signals.mouseDrag.connect( [&]( Point start, Point current ){
             int stVal = start.getPosition( layoutDirection );
@@ -64,7 +66,7 @@ namespace cursed{
             int64_t perCell = _maxValue / size;
 
             this->incrementValue( diff * perCell );
-        });
+        } );
         {
             SizeLimits limits = _valueIndicator->sizeLimits();
             limits.minimum.width = 1;

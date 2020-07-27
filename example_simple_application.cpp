@@ -31,8 +31,10 @@
 #include "IListModel.hpp"
 #include "ListModelIndex.hpp"
 #include "ListView.hpp"
+#include "ScrolledListView.hpp"
 #include "Color.hpp"
 #include "Button.hpp"
+#include "Label.hpp"
 
 #include <fstream>
 #include <thread>
@@ -120,19 +122,25 @@ public:
     ExampleListModel() : 
         _rows{ 
             RowItem{ "I", "am", "Sparta!", "HHHH", "YYYY" },
-            RowItem{ "Et", "tu", "Brute?", "XXXX", "ZZZZ" }
+            RowItem{ "Et", "tu", "Brute?", "XXXX", "ZZZZ" },
+            RowItem{ "🌞🌞🌞🌞🌞🌞🌞🌞", "tu", "🦖🦖🦖🦖🦖", "🐍🐍🐍🐍🐍", "🐅🐅🐅🐅" },
+            RowItem{ "🌲","🌳", "🌴", "🎄", "🎋" }
         },
         _roleNames{ "first", "second", "third", "4th", "5th" }
     {
     }
     ~ExampleListModel(){}
-    int64_t rowCount() const{
+    int64_t rowCount() const override{
         return _rows.size();
     }
-    std::vector<int> displayRoles() const{ return { 0, 1, 2, 3, 4 }; }
+    std::vector<int> displayRoles() const override{ return { 0, 1, 2, 3, 4 }; }
 
-    const std::string _badRole = "bad-role";
-    const std::string& roleName( int role ) const{
+    static const std::string& badRole(){ 
+        static const std::string name = "bad-role";
+        return name;
+    }
+
+    const std::string& roleName( int role ) const override{
         switch( role ){
         case 0:
             return std::get<0>(_roleNames);
@@ -145,11 +153,11 @@ public:
         case 4:
             return std::get<4>(_roleNames);
         }
-        return _badRole;
+        return badRole();
     }
 
     const std::string _badIndex = "bad-index";
-    const std::string& text( const cursed::ListModelIndex& ix, int role ) const{
+    const std::string& text( const cursed::ListModelIndex& ix, int role ) const override{
         if( ix.valid() ){
             switch( role ){
             case 0:
@@ -206,38 +214,49 @@ private:
 int main( int unused(argc), char* unused(argv[]) ){
     using namespace cursed;
 
-    cursed::Log::_outputStream = new std::ofstream("test_app_log.txt");
+    cursed::Log::setOutputStream( new std::ofstream("test_app_log.txt") );
     cursed_out( "running application: " << cprint(argv[0]) );
 
     IWindow* gridwin = nullptr;
-    ListView* listView = nullptr;
+    ScrolledListView* listView = nullptr;
     TimeWindow* timewin1 = nullptr;
     TimeWindow* timewin2 = nullptr;
     TimeWindow* timewin3 = nullptr;
     Button* button1 = nullptr;
-
+    Button* button2 = nullptr;
+    Label* clickedCellContentsLabel = nullptr;
 
     ExampleListModel listModel;
 
     IWindow* rightPanel =  new Window{ Direction::Vertical, "rightPanel",
         { 
             { 1, gridwin = new GridWindow{ 4, Direction::Horizontal, "gridwin" } },
-            { 2, listView = new ListView{ &listModel } }
+            { 2, listView = new ScrolledListView{ &listModel } }
         }
     }; 
 
+    IWindow* leftPanel = new Window{ Direction::Vertical, "leftvpanel", { 
+                    cursed::LayoutObject{ 1, timewin1 = new TimeWindow{ Direction::Horizontal, "Nazli time" } },
+                    cursed::LayoutObject{ 1, timewin2 = new TimeWindow{ Direction::Horizontal, "Josh time" } },
+                    cursed::LayoutObject{ 1, timewin3 = new TimeWindow{ Direction::Horizontal, "Sunny time" } },
+                    cursed::LayoutObject{ 1, new Window{ Direction::Horizontal, "whatsclicked", {
+                        { 1, new Label{ "Clicked cell contents:" } },
+                        { 1, clickedCellContentsLabel = new Label{ "none" } }
+                    } } },
+                    cursed::LayoutObject{ 2, button1 = new Button{ "Palm Tree!", Direction::Horizontal, "button1" } },
+                    cursed::LayoutObject{ 2, button2 = new Button{ "Decisuous Tree!", Direction::Horizontal, "button1" } },
+                } };
+
     cursed::Application app{ Direction::Horizontal, 
         { 
-            {1, new Window{ Direction::Vertical, "leftvpanel", { 
-                    cursed::LayoutObject{ 1, timewin1 = new TimeWindow{ Direction::Horizontal, "time1" } },
-                    cursed::LayoutObject{ 1, timewin2 = new TimeWindow{ Direction::Horizontal, "time2" } },
-                    cursed::LayoutObject{ 1, timewin3 = new TimeWindow{ Direction::Horizontal, "time3" } },
-                    cursed::LayoutObject{ 1, button1 = new Button{ "Push Me!", Direction::Horizontal, "button1" } },
-                } } 
-            },
+            {1, leftPanel },
             {1, rightPanel } 
         }
     };
+
+    listView->listView().signals.cellClicked.connect( [&]( const ListModelIndex& index, int role ){
+        clickedCellContentsLabel->setText( index.text( role ) );
+    });
 
     cursed_out( "Application: " << cprint(app.dimensions().size.width) );
 
@@ -251,11 +270,20 @@ int main( int unused(argc), char* unused(argv[]) ){
 
     cursed::ColorPair coolGrey(bluewhite, bluegrey);
     cursed::ColorPair greyCool(bluegrey, bluewhite);
-    listView->setRoleStripingColors( coolGrey, greyCool );
+    listView->listView().setRoleStripingColors( coolGrey, greyCool );
 
     cursed::ColorPair buttonNormal{ black, bluewhite };
     cursed::ColorPair buttonPressed{ bluewhite, black };
     button1->setColors( buttonNormal, buttonPressed );
+    button2->setColors( buttonNormal, buttonPressed );
+
+    auto button1ClickedToken = button1->signals.clicked.connect([&]( int mouseButton ){ 
+        listModel.setText( "🌴", listModel.index(0), 0 );
+    });
+
+    button2->signals.clicked.connect([&]( int mouseButton ){ 
+        listModel.setText( "🌳", listModel.index(0), 0 );
+    });
 
     app.refresh();
 
@@ -273,6 +301,7 @@ int main( int unused(argc), char* unused(argv[]) ){
         timewin3->onTimeout(); 
         listModel.setText(std::to_string(count++),ix,0);
     } );
+
     timer.signals.timeout.connect( [&]{ 
         app.refresh();
     } );

@@ -28,66 +28,52 @@
 
 namespace cursed{
 
-void Button::onMouseInput( const Point& relative, MouseButtonEvent& e ){
-    bool contained = dimensions().containsRelative( relative );
-    bool moved = e.moveEvent();
-
-    if(  moved && contained ){ 
-        signals.mouseDrag.emit( _pressedPoint, relative );
-        return;
-    }
-    if( e._consumed ) contained = false;
-
-    if( contained ) e._consumed = true;
-
-    bool clicked  = e.mouseKeyEvent( 1, MouseButtonEventType::Clicked );
-    bool clicked2 = e.mouseKeyEvent( 1, MouseButtonEventType::DoubleClicked );
-    bool clicked3 = e.mouseKeyEvent( 1, MouseButtonEventType::TripleClicked );
-
-    bool pressed  = e.mouseKeyEvent( 1, MouseButtonEventType::Pressed );
-    bool released = _pressed && !pressed ? true : false;
-
-    if( contained && pressed ){
-        _pressed = true; draw(true); ::refresh();
-        signals.pressed();
-        _pressedPoint = relative;
+  Button::Button( std::string text, Direction layoutDirection, const std::string& name, std::initializer_list<LayoutObject> children ) : 
+        MouseEventWindow( layoutDirection, name, children ),
+        _text(text)
+    { 
+        connectActions();
     }
 
-    if( contained && clicked ){
-        signals.clicked();
-        _pressed = true; draw(true); ::refresh();
-        signals.released();
+void Button::connectActions(){
+    signals.pressed.connect([&]( int mouseButton ){
+        if( mouseButton == 1 ){
+            _pressed = true; draw(true); ::refresh();
+        }
+    });
+
+    const auto setPressedAndRedraw = []( Button* button ){
+        button->_pressed = true; button->draw(true); ::refresh(); 
+    };
+    const auto unsetPressedAndRedraw = []( Button* button ){
+        button->_pressed = false; button->draw(true); ::refresh(); 
+    };
+
+    constexpr int leftButton = 1;
+    signals.clicked.connect([&]( int mouseButton ){ 
+        setPressedAndRedraw( this );
         addDelayedAction( std::chrono::milliseconds(200),[&]{
-            _pressed = false; draw(true); ::refresh();
+            unsetPressedAndRedraw(this);
         }); 
-    }
+    }, {leftButton} );
 
-    if( contained && clicked2 ){
-        signals.doubleClicked( );
-        _pressed = true; draw(true); ::refresh();
+    signals.released.connect([&]( int mouseButton ){ 
+        unsetPressedAndRedraw(this);
+    }, {leftButton} );
+
+    signals.doubleClicked.connect([&]( int mouseButton ){
+        setPressedAndRedraw(this);
         addDelayedAction( std::chrono::milliseconds(200),[&]{
-            _pressed = false; draw(true); ::refresh();
+            unsetPressedAndRedraw(this);
         }); 
-    }
+    }, {leftButton} );
 
-    if( contained && clicked3 ){
-        signals.tripleClicked( );
-        _pressed = true; draw(true); ::refresh();
+    signals.tripleClicked.connect([&]( int mouseButton ){
+        setPressedAndRedraw(this);
         addDelayedAction( std::chrono::milliseconds(200),[&]{
-            _pressed = false; draw(true); ::refresh();
+            unsetPressedAndRedraw(this);
         }); 
-    }
-
-    if( _pressed && released ){
-        _pressed = false; draw(true); ::refresh();
-        signals.released( );
-    }
-
-    if( _pressed && !contained ){
-        _pressed = false; draw(true); ::refresh();
-    }
-
-    Window::onMouseInput( relative, e );
+    }, {leftButton} );
 }
 
 void Button::draw( bool fullRefresh ){

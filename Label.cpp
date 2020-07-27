@@ -60,4 +60,19 @@ void Label::draw( bool fullRefresh ){
     }
 }
 
+void Label::setText( const std::string txt ){
+    auto previousValue = _text;
+    _text = txt;
+    draw(true);
+    signals.valueChanged.emit( _text, previousValue );
+}
+
+void Label::setColor( unsigned long color ){
+    visualProperties.color = color;
+}
+
+void Label::setAlignment( const Alignment& alignment ){
+    visualProperties.alignment = alignment;
+}
+
 }

@@ -32,7 +32,7 @@
 
 int main( int argc, char* [] ){
     using namespace cursed;
-    Log::_outputStream = &std::cout;
+    Log::setOutputStream( &std::cout );
 
     cursed_out( cprint(argc) );
 

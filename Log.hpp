@@ -39,8 +39,13 @@ namespace cursed{
 
         static Log _instance;
 
-        static std::ostream* _outputStream;
+        static void setOutputStream( std::ostream* stream ){
+            _outputStream = stream;
+        }
+
         std::stringstream ss;
+    private:
+        static std::ostream* _outputStream;
     };
 
     template<typename T>

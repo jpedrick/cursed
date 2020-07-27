@@ -45,12 +45,12 @@ void ListView::setDataModel( IListModel* m ){
 
     connections.rowsInserted = _model->signals.rowsInserted.connect( 
         [this]( int64_t begin, int64_t count ){ 
-            this->onRowsInserted(begin, count ); 
+            this->onRowsInserted(begin, count); 
         });
 
     connections.rowsRemoved = _model->signals.rowsRemoved.connect( 
         [this]( int64_t begin, int64_t count ){ 
-            this->onRowsRemoved(begin, count ); 
+            this->onRowsRemoved(begin, count); 
         });
     _displayRoles = _model->displayRoles();
 }
@@ -73,9 +73,20 @@ void ListView::onRowsRemoved( int64_t unused(begin), int64_t unused(count) ){
 
 void ListView::reset(){
     if( _model ){
-        connections.dataChanged.disconnect();
-        connections.rowsInserted.disconnect();
-        connections.rowsRemoved.disconnect();
+        connections.dataChanged->disconnect();
+        connections.rowsInserted->disconnect();
+        connections.rowsRemoved->disconnect();
+    }
+}
+
+void ListView::onMouseInput( const Point& relative, MouseButtonEvent& e ){
+    for( int role : _displayRoles ){
+        auto roleGeom = roleGeometry(role);
+        if ( roleGeom.contains(relative.x) ){
+            if( relative.y < _model->rowCount() ){
+                signals.cellClicked.emit( _model->index(relative.y - firstVisibleRow()), role );
+            }
+        }
     }
 }
 

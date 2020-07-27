@@ -44,9 +44,14 @@ Window::Window( Direction layout, const std::string& n, std::initializer_list<La
     for( auto child : _layout.objects() ) child->setParent( this, i );
 }
 
+Window::Window( Direction layout, const std::string& name ) : Window( layout, name, {} ) {}
+Window::Window( Direction layout ) : Window( layout, "", {} ) {}
+Window::Window( ) : Window( Direction::Vertical, "", {} ) {}
+
 void Window::destroyChildren(){
     _layout.clear();
 }
+
 Window::~Window(){
     destroy();
 }
@@ -77,6 +82,10 @@ Point Window::absolute( const Point& p ) const{
     if( parent() ){ return parent()->absolute( p ) + dimensions().topLeft; }
 
     return dimensions().topLeft + p;
+}
+
+void Window::draw( bool fullRefresh ) {
+
 }
 
 void Window::onMouseInput( const Point& relative, MouseButtonEvent& e ){

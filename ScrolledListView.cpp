@@ -29,7 +29,7 @@
 namespace cursed{
 
 ScrolledListView::ScrolledListView( IListModel* dataModel ) :
-    Window( Direction::Horizontal, "scrolled-list-view",
+    MouseEventWindow( Direction::Horizontal, std::string("scrolled-list-view"),
     { 
         LayoutObject{ 1, _listView = new ListView( dataModel ) },
         LayoutObject{ 0, _vScrollBar = new ScrollBar{ Direction::Vertical } } 
@@ -38,12 +38,14 @@ ScrolledListView::ScrolledListView( IListModel* dataModel ) :
     {
         SizeLimits limits = _vScrollBar->sizeLimits();
         limits.minimum.height = 1;
+        limits.maximum.width = 1;
         _vScrollBar->setSizeLimits( limits );
         _vScrollBar->setMaxValue(20);
         _vScrollBar->setValue(0);
         _vScrollBar->setButtonIncrement(4);
     }
-    modelConnections.rowsInserted =
+
+    modelConnections.emplace_back(
         dataModel->signals.rowsRemoved.connect([&]( int begin, int count ){ 
             int finalValue = _vScrollBar->value();
             if( begin >= _vScrollBar->value() ){
@@ -51,9 +53,9 @@ ScrolledListView::ScrolledListView( IListModel* dataModel ) :
             }
             _vScrollBar->setMaxValue( _listView->model()->rowCount() );
             _vScrollBar->setValue( finalValue );
-        });
+        }) );
 
-    modelConnections.rowsRemoved =
+    modelConnections.emplace_back( 
         dataModel->signals.rowsInserted.connect([&]( int begin, int count ){ 
             int finalValue = _vScrollBar->value();
             if( begin >= _vScrollBar->value() ){
@@ -61,6 +63,27 @@ ScrolledListView::ScrolledListView( IListModel* dataModel ) :
             }
             _vScrollBar->setMaxValue( _listView->model()->rowCount() );
             _vScrollBar->setValue( finalValue );
-        });
+        }) );
+
+    modelConnections.emplace_back( _vScrollBar->signals.valueChanged.connect( [this]( int64_t newValue, int64_t oldValue ){
+            _listView->adjustViewportTopLeft( newValue - oldValue, 0 );
+        }) );
 }
+
+const ListView& ScrolledListView::listView() const {
+    return *_listView;
+}
+
+ListView& ScrolledListView::listView() {
+    return *_listView;
+}
+
+const ScrollBar& ScrolledListView::verticalScrollBar() const {
+    return *_vScrollBar;
+}
+
+ScrollBar& ScrolledListView::verticalScrollBar() {
+    return *_vScrollBar;
+}
+
 }

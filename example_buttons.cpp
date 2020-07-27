@@ -41,13 +41,15 @@ int main( int __attribute__((unused))argc, char* __attribute__((unused))argv[] )
     Button* b3 = nullptr;
     Button* b4 = nullptr;
     Label* label = nullptr;
-    ScrollBar* scroller = nullptr;
+    ScrollBar* hscroller = nullptr;
+    ScrollBar* vscroller = nullptr;
     Application app{ Direction::Vertical, {
         { 0, label = new Label{ "some text for a label" } }, 
-        { 0, scroller = new ScrollBar{ Direction::Horizontal } }, 
+        { 0, hscroller = new ScrollBar{ Direction::Horizontal } }, 
         { 1, new Window{ 
             Direction::Horizontal, "button-window",
             { 
+                {0, vscroller = new ScrollBar{ Direction::Vertical} }, 
                 {1, new Window{ Direction::Vertical, "leftvpanel", { 
                         { 1, b1 = new Button{ "b1", Direction::Horizontal, "b1" } },
                         { 1, b2 = new Button{ "b2", Direction::Horizontal, "b2" } }
@@ -69,12 +71,21 @@ int main( int __attribute__((unused))argc, char* __attribute__((unused))argv[] )
     }
 
     {
-        SizeLimits limits = scroller->sizeLimits();
+        SizeLimits limits = hscroller->sizeLimits();
         limits.minimum.height = 1;
-        scroller->setSizeLimits( limits );
-        scroller->setMaxValue(20);
-        scroller->setValue(0);
-        scroller->setButtonIncrement(4);
+        hscroller->setSizeLimits( limits );
+        hscroller->setMaxValue(20);
+        hscroller->setValue(0);
+        hscroller->setButtonIncrement(4);
+    }
+
+    {
+        SizeLimits limits = hscroller->sizeLimits();
+        limits.minimum.width = 1;
+        vscroller->setSizeLimits( limits );
+        vscroller->setMaxValue(200);
+        vscroller->setValue(0);
+        vscroller->setButtonIncrement(20);
     }
 
     {
@@ -102,11 +113,13 @@ int main( int __attribute__((unused))argc, char* __attribute__((unused))argv[] )
 
     cursed::ColorPair scrollButtonsNormal{ bluewhite, yellow };
     cursed::ColorPair scrollButtonsPressed{ yellow, bluewhite };
-    scroller->setButtonColors( scrollButtonsNormal, scrollButtonsPressed );
+    hscroller->setButtonColors( scrollButtonsNormal, scrollButtonsPressed );
+    vscroller->setButtonColors( scrollButtonsNormal, scrollButtonsPressed );
 
     cursed::ColorPair indicatorNormal{ red, yellow };
     cursed::ColorPair indicatorPressed{ blue, green };
-    scroller->setIndicatorColors( indicatorNormal, indicatorPressed );
+    hscroller->setIndicatorColors( indicatorNormal, indicatorPressed );
+    vscroller->setIndicatorColors( indicatorNormal, indicatorPressed );
 
     cursed::ColorPair b1Normal{ nearblack, bluewhite };
     cursed::ColorPair b1Pressed{ bluewhite, nearblack };
@@ -124,28 +137,34 @@ int main( int __attribute__((unused))argc, char* __attribute__((unused))argv[] )
     cursed::ColorPair b4Pressed{ blue, yellow };
     b4->setColors(b4Normal, b4Pressed);
 
-    b1->signals.clicked.connect([label]( ){ label->setText( "b1 clicked " ); });
-    b1->signals.doubleClicked.connect([label]( ){ label->setText( "b1 double-clicked " ); });
-    b1->signals.tripleClicked.connect([label]( ){ label->setText( "b1 triple-clicked " ); });
+    b1->signals.clicked.connect([label]( int mouseButton ){ label->setText( "b1 clicked with mouseButton: " + std::to_string(mouseButton) ); });
+    b1->signals.doubleClicked.connect([label]( int mouseButton ){ label->setText( "b1 double-clicked with mouseButton: " + std::to_string(mouseButton) ); });
+    b1->signals.tripleClicked.connect([label]( int mouseButton ){ label->setText( "b1 triple-clicked with mouseButton: " + std::to_string(mouseButton) ); });
 
-    b1->signals.pressed.connect([&]{ label->setText( "b1 pressed" ); app.refresh(); });
-    b1->signals.released.connect([&]{ label->setText( "b1 released" ); app.refresh(); });
+    b1->signals.pressed.connect([&]( int mouseButton ){ label->setText( "pressed b1 with mouseButton " + std::to_string(mouseButton) ); app.refresh(); });
+    b1->signals.released.connect([&]( int mouseButton ){ label->setText( "released b1" ); app.refresh(); });
 
-    b2->signals.clicked.connect([&]( ){ label->setText( "b2 clicked " ); });
-    b2->signals.pressed.connect([&]{ label->setText( "b2 pressed" ); });
-    b2->signals.released.connect([&]{ label->setText( "b2 released" ); });
+    b2->signals.clicked.connect([&]( int mouseButton ){ label->setText( "b2 clicked " ); });
+    b2->signals.pressed.connect([&]( int mouseButton ) { label->setText( "b2 pressed" ); });
+    b2->signals.released.connect([&]( int mouseButton ){ label->setText( "b2 released" ); });
 
-    b3->signals.clicked.connect([&]( ){ label->setText( "b3 clicked " ); });
-    b3->signals.pressed.connect([&]{ label->setText( "b3 pressed" ); });
-    b3->signals.released.connect([&]{ label->setText( "b3 released" ); });
+    b3->signals.clicked.connect([&]( int mouseButton ){ label->setText( "b3 clicked " ); });
+    b3->signals.pressed.connect([&]( int mouseButton ){ label->setText( "b3 pressed" ); });
+    b3->signals.released.connect([&]( int mouseButton ){ label->setText( "b3 released" ); });
 
-    b4->signals.clicked.connect([&]( ){ label->setText( "b4 clicked " ); });
-    b4->signals.pressed.connect([&]{ label->setText( "b4 pressed" ); });
-    b4->signals.released.connect([&]{ label->setText( "b4 released" ); });
+    b4->signals.clicked.connect([&]( int mouseButton ){ label->setText( "b4 clicked " ); });
+    b4->signals.pressed.connect([&]( int mouseButton ){ label->setText( "b4 pressed" ); });
+    b4->signals.released.connect([&]( int mouseButton ){ label->setText( "b4 released" ); });
 
-    scroller->signals.valueChanged.connect([&]( ScrollBar::NewValue newVal, ScrollBar::OldValue oldVal ){
+    hscroller->signals.valueChanged.connect([&]( ScrollBar::NewValue newVal, ScrollBar::OldValue oldVal ){
         std::stringstream ss;
-        ss << " scrollbar value changed " << cprint(newVal) << cprint(oldVal) << cprint(scroller->maxValue());
+        ss << "horizonal scrollbar value changed " << cprint(newVal) << cprint(oldVal) << cprint(hscroller->maxValue());
+        label->setText( ss.str() );
+    });
+
+    vscroller->signals.valueChanged.connect([&]( ScrollBar::NewValue newVal, ScrollBar::OldValue oldVal ){
+        std::stringstream ss;
+        ss << "vertical scrollbar value changed " << cprint(newVal) << cprint(oldVal) << cprint(hscroller->maxValue());
         label->setText( ss.str() );
     });
 

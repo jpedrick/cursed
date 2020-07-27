@@ -32,9 +32,15 @@
 
 namespace cursed{
 
-class Window : public IWindow{
+class Window : public IWindow {
 public:
-    Window( Direction layout = Direction::Vertical, const std::string& name = "", std::initializer_list<LayoutObject> children = {});
+    // primary constructor
+    Window( Direction layout, const std::string& name, std::initializer_list<LayoutObject> children );
+
+    Window( Direction layout, const std::string& name );
+    Window( Direction layout );
+    Window( );
+
     ~Window();
 
     void setParent( IWindow* parent, int& i ) final;
@@ -69,15 +75,19 @@ public:
     int layoutRatio() const override;
     void setLayoutRatio( int ) override;
     bool canAquireFocus() const override { return false; }
+    void setDebug(){ _debug = true; }
+
 protected: 
     void setDrawWindowDelegate( IDrawWindowDelegate* delegate ) override { _drawingDelegate = delegate; }
     IDrawWindowDelegate* drawWidowDelegate() override { return _drawingDelegate; }
+    void draw( bool fullRefresh ) override;
 
     void destroyChildren();
     void destroy();
     BoxLayout& layout(){ return _layout; }
-    bool debug() const override{ return false; }
+    bool debug() const override{ return _debug; }
     bool show() const override { return true; }
+
 private:
     IWindow* _parent = nullptr;
     IDrawWindowDelegate* _drawingDelegate = nullptr;
@@ -87,6 +97,7 @@ private:
     int _id = -1;
     std::string _name;
     int _layoutRatio = 1;
+    bool _debug = false;
 };
 
 }

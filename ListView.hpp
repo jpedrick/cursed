@@ -23,7 +23,8 @@
 //  You should also have received a copy of the GNU Affero General Public License
 //  along with Cursed.  If not, see <https://www.gnu.org/licenses/>.
 #pragma once
-#include "Window.hpp"
+#include "MouseEventWindow.hpp"
+
 #include "Direction.hpp"
 #include "Signal.hpp"
 #include "IListModel.hpp"
@@ -66,16 +67,22 @@ struct IndexHash<ListViewIndex>{
     }
 };
 
-class ListView : public Window{
+class ListView : public MouseEventWindow{
 public:
     template< typename... Args >
     ListView( IListModel* dataModel,  Args&&... args ) : 
-        Window( std::forward<Args>(args)... ),
+        MouseEventWindow( std::forward<Args>(args)... ),
         _viewport(-1,-1)
     { 
         delegates.clear();
         setDataModel( dataModel );
     }
+
+    typedef Signal< const ListModelIndex& signal_field(index), int signal_field(role) > CellEvent;
+
+    struct : Window {
+        CellEvent cellClicked;
+    } signals;
 
     IListModel* model(){ return _model; }
 
@@ -100,20 +107,27 @@ public:
     void setRoleStripingColors( unsigned long evenColorPair, unsigned long oddColorPair );
 
 protected:
+    void onMouseInput( const Point& relative, MouseButtonEvent& e ) override;
+
     void onDataChanged( const ListModelIndex&, const ListModelIndex& );
     void onRowsInserted( int64_t begin, int64_t count );
     void onRowsRemoved( int64_t begin, int64_t count );
+
     IListModel* _model;
     struct{
-        IListModel::DataChanged::ConnectionToken  dataChanged;
-        IListModel::RowsInserted::ConnectionToken rowsInserted;
-        IListModel::RowsRemoved::ConnectionToken  rowsRemoved;
+        IConnectionToken::pointer  dataChanged;
+        IConnectionToken::pointer rowsInserted;
+        IConnectionToken::pointer  rowsRemoved;
     } connections;
 
     Point _viewport;
     struct RoleGeometry{
         int startX;
         int width;
+
+        bool contains( int x ) const{
+            return x >= startX && x < startX + width;
+        }
     };
     std::unordered_map<int,RoleGeometry> _roleGeometry;
     int64_t firstVisibleRow() const;

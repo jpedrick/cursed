@@ -23,6 +23,8 @@
 //  You should also have received a copy of the GNU Affero General Public License
 //  along with Cursed.  If not, see <https://www.gnu.org/licenses/>.
 #include "Draw.hpp"
+#include <unicode/unistr.h>
+#include <unicode/ustring.h>
 #include <memory>
 
 namespace cursed{
@@ -124,26 +126,35 @@ void Draw::character( IWindow* win, Point position, char data ){
     }
 }
 
-void Draw::textLine( IWindow* win, Point start, const char* data, size_t len ){
+void Draw::textLine( IWindow* win, Point start, const icu::UnicodeString& str ){
     Point p = win->absolute( start );
 
-    len = strnlen( data, len );
-    while( len > 0 && data[len - 1] == '\0' ) --len;
+    auto len = str.length();
 
     if( len == 0 ) return;
 
     Rectangle dim = win->dimensions();
 
-    int displayLen = std::min( dim.size.width - start.x, (int)len );
+    size_t requiredSize = str.countChar32();
+
+    int displayLen = std::min( dim.size.width - start.x, (int)requiredSize );
     displayLen = std::max( displayLen, 0 );
 
+    std::string utf8;
+    str.tempSubString(0, str.moveIndex32(0,displayLen) ).toUTF8String( utf8 );
+
+    cursed_out( cprint(utf8) << " " << cprint(displayLen) << " " << cprint(requiredSize) << " " << cprint(start.x) << " " << cprint(dim.size.width) );
+
     if( dim.containsRelative(start) && displayLen > 0 ){
-        mvwaddnstr( win->window(), p.y, p.x, data, displayLen );
+        mvwaddnstr( win->window(), p.y, p.x, utf8.c_str(), utf8.size() );
     }
 }
 
 void Draw::text( IWindow* win, Point start, const char* data, size_t len ){
-    cursed_out( "writing text: " << cprint(data) << " " << cprint(start) );
+    // assume unicode
+    auto ustr = icu::UnicodeString::fromUTF8( data );
+
+    cursed_out( cprint(ustr.countChar32()) << " " << cprint(data) );
 
     auto buffer = std::make_unique<char[]>(len);
     strncpy( buffer.get(), data, len );
@@ -151,15 +162,19 @@ void Draw::text( IWindow* win, Point start, const char* data, size_t len ){
 
     char* token = nullptr;
     Point pos = start;
-    while( ( token = strtok_r( remaining, "\n", &remaining ) ) ){
-        size_t tokLen = strlen(token);
-        cursed_out( "writing token: : " << cprint(token) << " " << cprint(pos) );
-        if ( token[tokLen] == '\n' ){
-            token[tokLen] = '\0';
+    int32_t cur = 0;
+    int32_t next = ustr.indexOf("\n"); 
+    do{
+        if( next == -1 ){ // no newline
+            textLine( win, pos, ustr.tempSubString(cur) ); 
+            cur = -1; // exit the loop
+        } else {
+            textLine( win, pos, ustr.tempSubStringBetween(cur, next) ); 
+            cur = next; // next != -1, so will loop again
+            next = ustr.indexOf("\n", next + 1);
         }
-        textLine( win, pos, token, strlen(token) ); 
         pos.y += 1;
-    }
+    }while( cur != -1 );
 }
 
 void Draw::text( IWindow* win, Point start, const std::string& data ){ 

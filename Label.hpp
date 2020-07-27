@@ -35,21 +35,24 @@ public:
         Window( std::forward<Args>(args)... ),
         _text(text)
     { }
-    void setColor( unsigned long color ){
-        visualProperties.color = color;
-    }
 
-    void setText( const std::string txt ){
-        _text = txt;
-        draw(true);
-    }
+    typedef std::string NewValue;
+    typedef std::string OldValue;
+    typedef Signal< NewValue, OldValue > ValueChanged;
 
-    const std::string text() const{ return _text; }
+    struct {
+        ValueChanged valueChanged; // pressed and released mouse 0 while cursor in window area
+    } signals;
 
-    void setAlignment( const Alignment& alignment ){
-        visualProperties.alignment = alignment;
-    }
-    void draw( bool __attribute__((unused))fullRefresh ) override;
+    void setColor( unsigned long color );
+
+    void setText( const std::string txt );
+
+    const std::string& text() const{ return _text; }
+
+    void setAlignment( const Alignment& alignment );
+
+    void draw( bool fullRefresh ) override;
 
 private:
     std::string _text;

@@ -23,35 +23,18 @@
 //  You should also have received a copy of the GNU Affero General Public License
 //  along with Cursed.  If not, see <https://www.gnu.org/licenses/>.
 #pragma once
-#include "Window.hpp"
+
+#include "MouseEventWindow.hpp"
+
 #include "Signal.hpp"
+
 #include <functional>
 
 namespace cursed{
-class Button : public Window{
+class Button : public MouseEventWindow{
 public:
-    typedef Signal< > Pressed;
-    typedef Signal< > Released;
-    typedef Signal< > Clicked;
-    typedef Signal< Point signal_field(start), Point signal_field(current) > MouseDrag;
+    Button( std::string text, Direction layoutDirection = Direction::Vertical, const std::string& name = "", std::initializer_list<LayoutObject> children = {} );
 
-    struct : Window {
-        Pressed pressed;
-        Released released;
-        Clicked  clicked; // pressed and released mouse 0 while cursor in window area
-        Clicked  doubleClicked; // pressed and released mouse 0 while cursor in window area
-        Clicked  tripleClicked; // pressed and released mouse 0 while cursor in window area
-        MouseDrag mouseDrag;
-    } signals;
-
-    template< typename... Args >
-    inline Button( std::string text,  Args&&... args ) : 
-        Window( std::forward<Args>(args)... ),
-        _text(text)
-    { 
-    }
-
-    void onMouseInput( const Point& relative, MouseButtonEvent& e ) override;
     void draw( bool fullRefresh ) override;
 
     void setColors( unsigned long normalColor, unsigned long pressedColor ){
@@ -60,11 +43,9 @@ public:
     }
 
     void setAttributes( unsigned long attrs ){ visualProperties.attributes = attrs; }
-    void setDebug(){ _debug = true; }
     void setText( const std::string& tx ){ _text = tx; }
-protected:
-    bool debug() const override{ return _debug; }
 private:
+    void connectActions();
     std::string _text;
     bool _pressed = false;
     int _pressedButton = 0;
@@ -73,7 +54,6 @@ private:
         unsigned long pressedColor = 0;
         unsigned long attributes = 0;
     } visualProperties;
-    bool _debug = false;
     Point _pressedPoint;
 };
 

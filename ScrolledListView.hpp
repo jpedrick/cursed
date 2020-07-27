@@ -23,7 +23,7 @@
 //  You should also have received a copy of the GNU Affero General Public License
 //  along with Cursed.  If not, see <https://www.gnu.org/licenses/>.
 #pragma once
-#include "Window.hpp"
+#include "MouseEventWindow.hpp"
 #include "IListModel.hpp"
 
 namespace cursed{
@@ -32,17 +32,21 @@ class IListModel;
 class ListView;
 class ScrollBar;
 
-class ScrolledListView : public Window{
+class ScrolledListView : public MouseEventWindow{
 public:
     ScrolledListView( IListModel* dataModel );
+
+    const ListView& listView() const; 
+    ListView& listView(); 
+
+    const ScrollBar& verticalScrollBar() const; 
+    ScrollBar& verticalScrollBar(); 
+
 private:
     ListView* _listView;
     ScrollBar* _vScrollBar;
 
-    struct {
-        IListModel::RowsInserted::ConnectionToken  rowsInserted;
-        IListModel::RowsRemoved::ConnectionToken  rowsRemoved;
-    } modelConnections;
+    std::vector<IConnectionToken::pointer> modelConnections;
 };
 
 }

@@ -39,6 +39,8 @@ extern "C"{
 
 namespace cursed{
 
+class IConnectionToken;
+
 class IDrawWindowDelegate;
 
 class IWindow{

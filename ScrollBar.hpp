@@ -23,14 +23,14 @@
 //  You should also have received a copy of the GNU Affero General Public License
 //  along with Cursed.  If not, see <https://www.gnu.org/licenses/>.
 #pragma once
-#include "Window.hpp"
+#include "MouseEventWindow.hpp"
 #include "Signal.hpp"
 #include <functional>
 
 namespace cursed{
 class Button;
 
-class ScrollBar : public Window{
+class ScrollBar : public MouseEventWindow{
 public:
     typedef int64_t NewValue;
     typedef int64_t OldValue;
@@ -42,7 +42,6 @@ public:
 
     ScrollBar( Direction layout, const std::string& name = "" );
 
-//    void onMouseInput( const Point& relative, const MouseButtonEvent& e ) override;
 //    void draw( bool fullRefresh ) override;
     int64_t setValue( int64_t v );
     void setMaxValue( int64_t v );
@@ -73,6 +72,7 @@ private:
     int64_t _buttonIncrement = 1;
     Direction _layoutDirection;
     bool _show = true;
+
 };
 
 }
