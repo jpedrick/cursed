@@ -75,6 +75,7 @@ void BoxLayout::onAllocationChanged( Rectangle allocation ) {
     int layoutDimension = allocation.size.getDimension( _dir );
     int currentPosition = 0;
     int remainingSpace = layoutDimension;
+
     for( size_t i = 0; i < _objects.size(); ++i ){
         auto& obj = _objects[i];
         if( obj->show() ){
@@ -96,8 +97,15 @@ void BoxLayout::onAllocationChanged( Rectangle allocation ) {
             remainingSpace -= objectDimensions.size.getDimension( _dir );
         }
     }
+
     bool hasAdjustable = false;
-    if( remainingSpace > 0 ){
+    int iterCount = 0;
+    constexpr int maxIters = 4;
+
+    // Loop until all remaining space is used
+    while( remainingSpace > 0 ){
+        if( ++iterCount > maxIters ) break;
+
         std::vector<size_t> adjustableObjs;
         for( size_t i = 0; i < _objects.size(); ++i ){
             auto& obj = _objects[i];
@@ -109,19 +117,22 @@ void BoxLayout::onAllocationChanged( Rectangle allocation ) {
                 hasAdjustable = true;
             }
         }
+
         if( adjustableObjs.size() > 0 ){
             int adjAmt = std::max( remainingSpace, remainingSpace / (int)adjustableObjs.size() );
             if( adjAmt > 0 ){
                 for( size_t i : adjustableObjs ){
-                    remainingSpace -= adjAmt;
                     auto& obj = _objects[i];
-                    obj->dimensions().size.adjust(_dir, adjAmt );
-                    if( i == 0 ){
-                        int remainder = remainingSpace % adjAmt;
-                        obj->dimensions().size.adjust( _dir, remainder );
+                    int maxSize = obj->sizeLimits().maximum.getDimension(_dir);
+                    int currentSize = obj->dimensions().size.getDimension(_dir );
 
-                        remainingSpace -= remainder;
-                    }
+                    // This shouldn't ever be negative, but if it is it means 
+                    // the object needs to shrink, so it's still correct.
+                    int objAdjAmt = std::min( adjAmt, maxSize - currentSize ); 
+
+                    obj->dimensions().size.adjust(_dir, objAdjAmt );
+                    remainingSpace -= objAdjAmt;
+
                     if( remainingSpace <= 0 ) break;
                 }
             }

@@ -31,14 +31,14 @@ namespace cursed{
 ScrolledListView::ScrolledListView( IListModel* dataModel ) :
     MouseEventWindow( Direction::Horizontal, std::string("scrolled-list-view"),
     { 
-        LayoutObject{ 1, _listView = new ListView( dataModel ) },
-        LayoutObject{ 0, _vScrollBar = new ScrollBar{ Direction::Vertical } } 
+        LayoutObject{ 10, _listView = new ListView( dataModel ) },
+        LayoutObject{ 1, _vScrollBar = new ScrollBar{ Direction::Vertical } } 
     } )
 {
     {
         SizeLimits limits = _vScrollBar->sizeLimits();
         limits.minimum.height = 1;
-        limits.maximum.width = 1;
+        limits.maximum.width = 3;
         _vScrollBar->setSizeLimits( limits );
         _vScrollBar->setMaxValue(20);
         _vScrollBar->setValue(0);

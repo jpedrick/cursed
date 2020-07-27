@@ -30,14 +30,14 @@ namespace cursed{
 struct SizeLimits{
     Size minimum;
     Size maximum;
-    static Size minimumSize(){ return Size{0,0}; }
-    static Size maximumSize(){ return Size{std::numeric_limits<int>::max(),std::numeric_limits<int>::max()}; }
-    static SizeLimits unlimited(){ return { minimumSize(), maximumSize() }; }
 
     int clippedSize( Direction dir, int sz ) const {
         return std::max( minimum.getDimension(dir), std::min( maximum.getDimension(dir), sz ) );
     }
 
+    static Size minimumSize(){ return Size{0,0}; }
+    static Size maximumSize(){ return Size{std::numeric_limits<int>::max(),std::numeric_limits<int>::max()}; }
+    static SizeLimits unlimited(){ return { minimumSize(), maximumSize() }; }
 };
 
 

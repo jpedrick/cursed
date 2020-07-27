@@ -49,7 +49,7 @@ namespace cursed{
         Window( layoutDirection, name, {
                 {1, _decreaseButton    = new Button( decreasingArrow(layoutDirection) ) },
                 {1, _aboveValueButton  = new Button("")},
-                {1, _valueIndicator    = new Button("")},
+                {1, _valueIndicator    = new Button("o", layoutDirection, "value-indicator:" + name)},
                 {1, _belowValueButton  = new Button("")},
                 {1, _increaseButton    = new Button( increasingArrow(layoutDirection) ) }
         } ),
@@ -65,22 +65,36 @@ namespace cursed{
 
         constexpr int actionButton = 1;
 
-        auto decreaseValue = [&]( int ){
-            cursed_out( "clicked decrease button: " << cprint(name) );
-            incrementValue(-1); 
-        };
-        auto increaseValue = [&]( int ){
-            cursed_out( "clicked increase button: " << cprint(name) );
-            incrementValue(1); 
-        };
-        _decreaseButton->signals.clicked.connect( decreaseValue );
-        _decreaseButton->signals.released.connect( decreaseValue );
+        // double and triple click events allow fast clicking the scroll buttons
+        auto decreaseValue = [&]( int ){ incrementValue(-1); };
+        auto increaseValue = [&]( int ){ incrementValue(1); };
+        _decreaseButton->signals.clicked.connect( decreaseValue, {actionButton}  );
+        _decreaseButton->signals.doubleClicked.connect( [&]( int ){ incrementValue(-2); }, {actionButton}  );
+        _decreaseButton->signals.tripleClicked.connect( [&]( int ){ incrementValue(-3); }, {actionButton}  );
+        _decreaseButton->signals.released.connect( decreaseValue, {actionButton}  );
 
-        _increaseButton->signals.clicked.connect( increaseValue );
-        _increaseButton->signals.released.connect( increaseValue );
+        _increaseButton->signals.clicked.connect( increaseValue, {actionButton}  );
+        _increaseButton->signals.doubleClicked.connect( [&]( int ){ incrementValue(2); }, {actionButton}  );
+        _increaseButton->signals.tripleClicked.connect( [&]( int ){ incrementValue(3); }, {actionButton}  );
+        _increaseButton->signals.released.connect( increaseValue, {actionButton}  );
 
-        _aboveValueButton->signals.clicked.connect([&]( int mouseButton ){ incrementValue( -_buttonIncrement ); }, {actionButton} );
-        _belowValueButton->signals.clicked.connect([&]( int mouseButton ){ incrementValue(  _buttonIncrement ); }, {actionButton} );
+        auto largeDecrease = [&]( int mouseButton ){ incrementValue( -_buttonIncrement ); };
+        auto doubleLargeDecrease = [&]( int mouseButton ){ incrementValue( -_buttonIncrement * 2 ); };
+        auto tripleLargeDecrease = [&]( int mouseButton ){ incrementValue( -_buttonIncrement * 3 ); };
+
+        auto largeIncrease = [&]( int mouseButton ){ incrementValue( _buttonIncrement ); };
+        auto doubleLargeIncrease = [&]( int mouseButton ){ incrementValue( _buttonIncrement * 2 ); };
+        auto tripleLargeIncrease = [&]( int mouseButton ){ incrementValue( _buttonIncrement * 3 ); };
+
+        _aboveValueButton->signals.clicked.connect(largeDecrease, {actionButton} );
+        _aboveValueButton->signals.doubleClicked.connect(doubleLargeDecrease, {actionButton} );
+        _aboveValueButton->signals.tripleClicked.connect(tripleLargeDecrease, {actionButton} );
+        _aboveValueButton->signals.released.connect(largeDecrease, {actionButton} );
+
+        _belowValueButton->signals.clicked.connect(largeIncrease, {actionButton} );
+        _belowValueButton->signals.doubleClicked.connect(doubleLargeIncrease, {actionButton} );
+        _belowValueButton->signals.tripleClicked.connect(tripleLargeIncrease, {actionButton} );
+        _belowValueButton->signals.released.connect(largeIncrease, {actionButton} );
 
         _valueIndicator->signals.mouseDrag.connect( [&]( Point start, Point current ){
             int stVal = start.getPosition( layoutDirection );
@@ -96,8 +110,8 @@ namespace cursed{
         } );
         {
             SizeLimits limits = _valueIndicator->sizeLimits();
-            limits.minimum.width = 2;
-            limits.minimum.height = 2;
+            limits.minimum.width = 1;
+            limits.minimum.height = 1;
             limits.maximum.getDimension( layoutDirection ) = 1000;
             _valueIndicator->setSizeLimits( limits );
         }
@@ -106,7 +120,7 @@ namespace cursed{
             limits.minimum.width = 3;
             limits.minimum.height = 1;
             limits.maximum.getDimension( layoutDirection ) = 1;
-            _decreaseButton->setSizeLimits( limits);
+            _decreaseButton->setSizeLimits( limits );
         }
         {
             SizeLimits limits = _increaseButton->sizeLimits();
@@ -120,15 +134,13 @@ namespace cursed{
 
     void ScrollBar::update( bool force ){
         if( _value != _aboveValueButton->layoutRatio() || _belowValueButton->layoutRatio() != (_maxValue - _value) || force ){
-            _aboveValueButton->setLayoutRatio( _value );
-            _belowValueButton->setLayoutRatio( _maxValue - _value );
+            int64_t size = dimensions().size.getDimension( _layoutDirection ) - _increaseButton->dimensions().size.getDimension( _layoutDirection ) * 2;
+            int64_t perCell = size > 0 ? _maxValue / size : 1L;
 
-            int size = _valueIndicator->dimensions().size.getDimension( _layoutDirection )
-                 + _aboveValueButton->dimensions().size.getDimension( _layoutDirection )
-                 + _belowValueButton->dimensions().size.getDimension( _layoutDirection );
+            _aboveValueButton->setLayoutRatio( std::max( _value - perCell / 2, 0L ) );
+            _belowValueButton->setLayoutRatio( std::max( _maxValue - _value - perCell / 2, 0L ) );
 
-            int64_t perCell = size > 0 ? _maxValue / size : 1;
-            _valueIndicator->setLayoutRatio(perCell);
+            _valueIndicator->setLayoutRatio( std::max( perCell, 2L ) );
 
             layout().onAllocationChanged( this->dimensions() );
         }
@@ -137,7 +149,7 @@ namespace cursed{
     void ScrollBar::refreshDimensions() {
         int space = (dimensions().size.getDimension(_layoutDirection) - 2);
         _valueIndicator->sizeLimits().minimum.getDimension( _layoutDirection) = 
-            (double)space/(double)_maxValue;
+            std::max( space/_maxValue, 1L );
 
         Window::refreshDimensions();
     }
