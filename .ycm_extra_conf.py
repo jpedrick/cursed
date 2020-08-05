@@ -33,11 +33,8 @@ import re
 from platform import uname
 
 rootDir = os.path.dirname( os.path.abspath(__file__) )
-athenaVersionFileName = rootDir + '/CMakeLists.txt'
-athenaPath = ""
 
 (system, node, release, version, machine, processor) = uname()
-
 
 import ycm_core
 
@@ -66,6 +63,7 @@ flags = [
 '-std=c++17',
 '-x', 'c++',
 '-I', '.',
+'-iquote', rootDir,
 '-isystem', '/usr/include/ncursesw',
 '-isystem', './unit_tests/fakeit/include',
 '-isystem', '/usr/include',

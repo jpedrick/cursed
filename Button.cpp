@@ -53,7 +53,7 @@ void Button::connectActions(){
     constexpr int leftButton = 1;
     signals.clicked.connect([&]( int mouseButton ){ 
         setPressedAndRedraw( this );
-        addDelayedAction( std::chrono::milliseconds(this->reactionDelay()),[&]{
+        this->addDelayedAction( std::chrono::milliseconds(this->reactionDelay()),[&]{
             unsetPressedAndRedraw(this);
         }); 
     }, {leftButton} );
@@ -95,7 +95,6 @@ void Button::draw( bool fullRefresh ){
 
         Rectangle boxDim{ {0,0}, dim.size };
         Draw::box( this, boxDim, borderStyle() );
-
 
         int midw = dim.size.width / 2;
         int midy = dim.size.height / 2;
