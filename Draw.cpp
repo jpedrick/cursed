@@ -23,38 +23,176 @@
 //  You should also have received a copy of the GNU Affero General Public License
 //  along with Cursed.  If not, see <https://www.gnu.org/licenses/>.
 #include "Draw.hpp"
-#include <unicode/unistr.h>
-#include <unicode/ustring.h>
+#include <locale>
+#include <codecvt>
+#include <string>
 #include <memory>
+#include <cassert>
+#include <sstream>
+#include <vector>
+#include <algorithm>
 
 namespace cursed{
 
-void Draw::box( IWindow* win, Rectangle dim ){
-    Point topLeft = dim.topLeft;
-    Point topRight = dim.topLeft;
-    topRight.x += dim.size.width;
+namespace boxCharacters{
+    struct Corners{
+        const char* upperLeft; 
+        const char* upperRight;
+        const char* bottomRight;
+        const char* bottomLeft;
+    };
+    struct Edges{
+        const char* horizontal; 
+        const char* vertival;
+        const char* horizontalTLeft; 
+        const char* horizontalTRight; 
+        const char* verticalTTop; 
+        const char* verticalTBottom; 
+        const char* cross;  
+        const char* leftVertical;  
+        const char* rightVertical; 
+    };                             
 
-    Point bottomRight = dim.topLeft;
-    topRight.y += dim.size.height;
-    topRight.x += dim.size.width;
+    // TODO: figure out how to draw diagonal boxes or use these chars
+    // Diagonal box chars:  🮢🮡 🮠🮣 🮤 🮥 🮦 🮧 🮨 🮪 🮫 🮬 🮭 🮮 🮯
+    
+    constexpr Corners diagonalCorners = { "🮣", "🮢", "🮠", "🮡" };
+    constexpr Corners roundedCorners = { "╭", "╮", "╯", "╰" };
+    constexpr Corners sharpCorners   = { "┌", "┐", "┘", "└" };
 
-    Point bottomLeft= dim.topLeft;
-    topRight.y += dim.size.height;
+    constexpr Corners fancyCorners1   = { sharpCorners.upperLeft, roundedCorners.upperRight, sharpCorners.bottomRight, roundedCorners.bottomLeft };
+    constexpr Corners fancyCorners2   = { roundedCorners.upperLeft, sharpCorners.upperRight, roundedCorners.bottomRight, sharpCorners.bottomLeft };
 
-    cursed::Draw::line( win, cursed::Direction::Vertical, topLeft,    dim.size.height, ACS_VLINE );
-    cursed::Draw::line( win, cursed::Direction::Vertical, topRight,   dim.size.height, ACS_VLINE );
+    constexpr Edges lightEdges = { "─", "│", "├", "┤", "┬", "┴", "┼", "⎸", "⎹" };
 
-    cursed::Draw::line( win, cursed::Direction::Vertical, topLeft,    dim.size.width, ACS_HLINE );
-    cursed::Draw::line( win, cursed::Direction::Vertical, bottomLeft, dim.size.width, ACS_HLINE );
-
-    cursed::Draw::character( win, topLeft,     ACS_ULCORNER ); // Upper left
-    cursed::Draw::character( win, bottomRight, ACS_LRCORNER ); // Lower right
-
-    cursed::Draw::character( win, bottomLeft,  ACS_LLCORNER ); // Lower left
-    cursed::Draw::character( win, topRight,    ACS_URCORNER ); // Upper Right
+    using WCharConverter = std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t>;
+    const WCharConverter converter;
 }
 
-void Draw::line( IWindow* win, Direction d, int pos, char c ){
+namespace boxStyle{
+    struct BoxCharacters{
+        boxCharacters::Corners corners;
+        boxCharacters::Edges edges;
+    };
+
+    //   🮣──────────────🮢
+    //   │ Diagonal Box │
+    //   🮡──────────────🮠
+    constexpr BoxCharacters Diagonal = BoxCharacters{
+        boxCharacters::diagonalCorners,
+        boxCharacters::lightEdges
+    };
+
+    //   ┌─────────────╮
+    //   │ Fancy Box 1 │
+    //   ╰─────────────┘
+    constexpr BoxCharacters Fancy1 = BoxCharacters{
+        boxCharacters::fancyCorners1,
+        boxCharacters::lightEdges
+    };
+
+    //   ╭─────────────┐
+    //   │ Fancy Box 2 │
+    //   └─────────────╯
+    constexpr BoxCharacters Fancy2 = BoxCharacters{
+        boxCharacters::fancyCorners2,
+        boxCharacters::lightEdges
+    };
+
+    //   ╭─────────────🮢
+    //   │ Fancy Box 3 │
+    //   🮡─────────────╯
+
+    //   🮣─────────────╮
+    //   │ Fancy Box 4 │
+    //   ╰─────────────🮠
+    
+    //   ┌───────────┐
+    //   │ Sharp Box │
+    //   └───────────┘
+    constexpr BoxCharacters Sharp = BoxCharacters{
+        boxCharacters::sharpCorners,
+        boxCharacters::lightEdges
+    };
+
+    //   ╭─────────────╮
+    //   │ Rounded Box │
+    //   ╰─────────────╯
+    constexpr BoxCharacters Rounded = BoxCharacters{
+        boxCharacters::roundedCorners,
+        boxCharacters::lightEdges
+    };
+
+    const BoxCharacters& lookup( BoxStyle style ){
+        switch( style ){
+            case BoxStyle::RoundedCorners: return Rounded;
+            case BoxStyle::SharpCorners: return Sharp;
+            case BoxStyle::Fancy1: return Fancy1;
+            case BoxStyle::Fancy2: return Fancy2;
+            case BoxStyle::Diagonal: return Diagonal;
+            default: throw std::runtime_error("unknown box style");
+        }
+    }
+
+    wchar_t getWChar( const char* ch ){
+      boxCharacters::WCharConverter converter;
+      const auto wstr = converter.from_bytes( ch );
+
+      assert( wstr.size() == 1 );
+
+      return wstr[0];
+    }
+}
+
+
+void Draw::drawBorder( IWindow* win, BoxStyle boxStyle ){
+    if ( boxStyle != BoxStyle::None ){
+        const auto& style = boxStyle::lookup( boxStyle );
+
+        const auto vline = boxStyle::getWChar( style.edges.vertival );
+        const auto hline = boxStyle::getWChar( style.edges.horizontal );
+        const auto ul = boxStyle::getWChar( style.corners.upperLeft );
+        const auto ur = boxStyle::getWChar( style.corners.upperRight );
+        const auto lr = boxStyle::getWChar( style.corners.bottomRight );
+        const auto ll = boxStyle::getWChar( style.corners.bottomLeft );
+
+        wborder( win->window(), vline, vline, hline, hline, ul, ur, ll, lr );
+    }
+}
+
+void Draw::box( IWindow* win, Rectangle dim, BoxStyle boxStyle ){
+    Point topLeft{0,0};
+    Point topRight = topLeft;
+    topRight.x += dim.size.width - 1;
+
+    Point bottomRight = topLeft;
+    bottomRight.y += dim.size.height - 1;
+    bottomRight.x += dim.size.width - 1;
+
+    Point bottomLeft = topLeft;
+    bottomLeft.y += dim.size.height - 1;
+
+    if ( boxStyle != BoxStyle::None ){
+        const auto& style = boxStyle::lookup( boxStyle );
+
+        wchar_t vline = boxStyle::getWChar( style.edges.vertival );
+        wchar_t hline = boxStyle::getWChar( style.edges.horizontal );
+
+        cursed::Draw::line( win, cursed::Direction::Vertical, 0, ACS_VLINE );
+        cursed::Draw::line( win, cursed::Direction::Vertical, dim.size.width - 1, ACS_VLINE );
+
+        cursed::Draw::line( win, cursed::Direction::Horizontal, 0, ACS_HLINE );
+        cursed::Draw::line( win, cursed::Direction::Horizontal, dim.size.height-1, ACS_HLINE );
+
+        cursed::Draw::text( win, topLeft, style.corners.upperLeft, ::strlen(style.corners.upperLeft) ); // Upper left
+        cursed::Draw::text( win, topRight, style.corners.upperRight, ::strlen(style.corners.upperRight) ); // Upper Right
+
+        cursed::Draw::text( win, bottomRight, style.corners.bottomRight, ::strlen(style.corners.bottomRight) ); // Lower right
+        cursed::Draw::text( win, bottomLeft, style.corners.bottomLeft, ::strlen(style.corners.bottomLeft ) ); // Lower Left 
+    }
+}
+
+void Draw::line( IWindow* win, Direction d, int pos, wchar_t c ){
     switch(d){
         case Direction::Horizontal:{
             if( pos < win->dimensions().size.height ){                           
@@ -72,7 +210,7 @@ void Draw::line( IWindow* win, Direction d, int pos, char c ){
     }
 }
 
-void Draw::line( IWindow* win, Direction d, Point start, int len, char c ){
+void Draw::line( IWindow* win, Direction d, Point start, int len, wchar_t c ){
     Point p = win->absolute( start );
     switch(d){
         case Direction::Horizontal:{
@@ -95,6 +233,17 @@ void Draw::line( IWindow* win, Direction d, Point start, int len, char c ){
     }
 }
 
+std::vector<cchar_t> Draw::convert( const std::wstring& wstr, const attr_t attrs, short colorPair ){
+    std::vector<cchar_t> ostr(wstr.size());
+    std::transform( wstr.begin(), wstr.end(), ostr.begin(), [attrs,colorPair]( wchar_t wc ){
+        cchar_t cc;
+        ::setcchar( &cc, &wc, attrs, colorPair, nullptr );
+        return cc;
+    });
+
+    return ostr;
+}
+
 Draw::AttributeGuard::AttributeGuard( IWindow* window, unsigned long flags ) : _window(window) { 
     attr_get( &_oldAttrs, &_oldColorPair, nullptr );
     ::attron( flags );
@@ -114,7 +263,11 @@ void Draw::wcharacter( IWindow* win, Point position, wchar_t data ){
     Rectangle dim = win->dimensions();
     if( dim.containsRelative(position) ){
         Point p = win->absolute( position );
-        mvwaddch( win->window(), p.y, p.x, data ); 
+
+        cchar_t cc;
+        ::setcchar( &cc, &data, 0, 0, nullptr );
+        
+        mvwadd_wchstr( win->window(), p.y, p.x, &cc ); 
     }
 }
 
@@ -126,57 +279,46 @@ void Draw::character( IWindow* win, Point position, char data ){
     }
 }
 
-void Draw::textLine( IWindow* win, Point start, const icu::UnicodeString& str ){
-    std::string ustr;
-    str.toUTF8String( ustr );
+
+void Draw::textLine( IWindow* win, Point start, const ccstring& str ){
     Point p = win->absolute( start );
 
-    auto len = str.length();
+    auto len = str.size();
 
     if( len == 0 ) return;
 
     Rectangle dim = win->dimensions();
 
-    size_t requiredSize = str.countChar32();
+    size_t requiredSize = str.size();
 
     int displayLen = std::min( dim.size.width - start.x, (int)requiredSize );
     displayLen = std::max( displayLen, 0 );
 
-    std::string utf8;
-    str.tempSubString(0, str.moveIndex32(0,displayLen) ).toUTF8String( utf8 );
-
     if( dim.containsRelative(start) && displayLen > 0 ){
-        mvwaddnstr( win->window(), p.y, p.x, utf8.c_str(), utf8.size() );
+        mvwadd_wchnstr( win->window(), p.y, p.x, str.data(), str.size() );
     }
 }
 
 void Draw::text( IWindow* win, Point start, const char* data, size_t len ){
-    // assume unicode
-    auto ustr = icu::UnicodeString::fromUTF8( data );
-
-    auto buffer = std::make_unique<char[]>(len);
-    strncpy( buffer.get(), data, len );
-    char* remaining = buffer.get();
-
-    char* token = nullptr;
-    Point pos = start;
-    int32_t cur = 0;
-    int32_t next = ustr.indexOf("\n"); 
-    do{
-        if( next == -1 ){ // no newline
-            textLine( win, pos, ustr.tempSubString(cur) ); 
-            cur = -1; // exit the loop
-        } else {
-            textLine( win, pos, ustr.tempSubStringBetween(cur, next) ); 
-            cur = ustr.moveIndex32(next, 1);
-            next = ustr.indexOf("\n", ustr.moveIndex32(next, 1) );
-        }
-        pos.y += 1;
-    }while( cur != -1 );
+    Draw::text( win, start, std::string(data) );
 }
 
+
 void Draw::text( IWindow* win, Point start, const std::string& data ){ 
-    Draw::text( win, start, data.data(), data.length() ); 
+    boxCharacters::WCharConverter converter;
+
+    text( win, start, converter.from_bytes( data ) );
+}
+
+void Draw::text( IWindow* win, Point start, const std::wstring& wstr ){
+    std::wstringstream ss( wstr );
+
+    std::wstring line;
+    Point pos = start;
+    while( std::getline( ss, line ) ){
+        Draw::textLine( win, pos, convert(line, 0, 0 ) ); 
+        pos.y += 1;
+    }
 }
 
 void Draw::printf( IWindow* win, Point start, const char* fmt, ... ){

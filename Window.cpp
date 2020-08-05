@@ -106,6 +106,15 @@ void Window::setParent( IWindow* par, int& i ) {
     }
 }
 
+void Window::setBorderStyle( BoxStyle style ){
+    _borderStyle = style;
+    draw(true);
+}
+
+BoxStyle Window::borderStyle( ){
+    return _borderStyle;
+}
+
 void Window::setDimensions( Rectangle rect ) {
     _dimensions = rect;
     refreshDimensions();

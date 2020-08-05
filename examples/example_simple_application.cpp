@@ -236,15 +236,15 @@ int main( int unused(argc), char* unused(argv[]) ){
     }; 
 
     IWindow* leftPanel = new Window{ Direction::Vertical, "leftvpanel", { 
-                    cursed::LayoutObject{ 1, timewin1 = new TimeWindow{ Direction::Horizontal, "Nazli time" } },
-                    cursed::LayoutObject{ 1, timewin2 = new TimeWindow{ Direction::Horizontal, "Josh time" } },
+                    cursed::LayoutObject{ 1, timewin1 = new TimeWindow{ Direction::Horizontal, "Ana time" } },
+                    cursed::LayoutObject{ 1, timewin2 = new TimeWindow{ Direction::Horizontal, "Russell time" } },
                     cursed::LayoutObject{ 1, timewin3 = new TimeWindow{ Direction::Horizontal, "Sunny time" } },
                     cursed::LayoutObject{ 1, new Window{ Direction::Horizontal, "whatsclicked", {
                         { 1, new Label{ "Clicked cell contents:" } },
                         { 1, clickedCellContentsLabel = new Label{ "none" } }
                     } } },
                     cursed::LayoutObject{ 2, button1 = new Button{ "Palm Tree!", Direction::Horizontal, "button1" } },
-                    cursed::LayoutObject{ 2, button2 = new Button{ "Decisuous Tree!", Direction::Horizontal, "button1" } },
+                    cursed::LayoutObject{ 2, button2 = new Button{ "Deciduous Tree!", Direction::Horizontal, "button1" } },
                 } };
 
     cursed::Application app{ Direction::Horizontal, 

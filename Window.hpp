@@ -27,6 +27,7 @@
 #include "Rectangle.hpp"
 #include "BoxLayout.hpp"
 #include "Signal.hpp"
+#include "BoxStyle.hpp"
 
 #include <vector>
 
@@ -56,6 +57,9 @@ public:
 
     void onKeyboardInput( int unused(c) ) override{ }
     void onMouseInput( const Point& relative, MouseButtonEvent& e ) override;
+
+    virtual void setBorderStyle( BoxStyle );
+    virtual BoxStyle borderStyle( );
 
     virtual void setSizeLimits( const SizeLimits& limits ) override{ _sizeLimits = limits; }
     virtual const SizeLimits& sizeLimits() const override { return _sizeLimits; }
@@ -98,6 +102,7 @@ private:
     std::string _name;
     int _layoutRatio = 1;
     bool _debug = false;
+    BoxStyle _borderStyle = BoxStyle::None;
 };
 
 }

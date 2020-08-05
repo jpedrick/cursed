@@ -44,6 +44,7 @@ extern "C"{
 namespace cursed{
 
     static WINDOW* initScreen(){
+        std::cout << "\x1b[?1006h";
         ::setlocale(LC_ALL, "");
 
         WINDOW* scr = ::initscr();

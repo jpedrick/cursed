@@ -1,3 +1,4 @@
+#pragma once
 //  Copyright notice:
 //  This file is part of Cursed.
 //  Cursed is free software: you can redistribute it and/or modify
@@ -22,42 +23,15 @@
 //
 //  You should also have received a copy of the GNU Affero General Public License
 //  along with Cursed.  If not, see <https://www.gnu.org/licenses/>.
-#pragma once
-
-#include "MouseEventWindow.hpp"
-
-#include "Signal.hpp"
-
-#include <functional>
 
 namespace cursed{
-class Button : public MouseEventWindow{
-public:
-    Button( std::string text, Direction layoutDirection = Direction::Vertical, const std::string& name = "", std::initializer_list<LayoutObject> children = {} );
-
-    void draw( bool fullRefresh ) override;
-
-    void setColors( unsigned long normalColor, unsigned long pressedColor ){
-        visualProperties.normalColor = normalColor;
-        visualProperties.pressedColor = pressedColor;
-    }
-
-    void setAttributes( unsigned long attrs ){ visualProperties.attributes = attrs; }
-    void setText( const std::string& tx ){ _text = tx; }
-    void setReactionDelay( int milliseconds ){ _reactionDelay = milliseconds; }
-    int reactionDelay() const;
-private:
-    void connectActions();
-    std::string _text;
-    bool _pressed = false;
-    int _pressedButton = 0;
-    struct{
-        unsigned long normalColor = 0;
-        unsigned long pressedColor = 0;
-        unsigned long attributes = 0;
-    } visualProperties;
-    Point _pressedPoint;
-    int _reactionDelay = 50;
-};
-
+    enum class BoxStyle{
+        None = 0,
+        SharpCorners,
+        RoundedCorners,
+        Fancy1,
+        Fancy2,
+        Diagonal,
+        end
+    };
 }

@@ -26,7 +26,7 @@
 
 #include "MouseButtonEvent.hpp"
 #include "Rectangle.hpp"
-#include "Border.hpp"
+#include "BoxStyle.hpp"
 #include "SizeLimits.hpp"
 #include "Signal.hpp"
 
@@ -57,7 +57,6 @@ public:
     virtual Point absolute( const Point& p ) const = 0;
     virtual IWindow* childAt( const Point& p ) const = 0;
 
-//    virtual void setBorderStyle( Border::Style bs ) = 0;
     virtual void setParent( IWindow*, int& i ) = 0;
     virtual void refresh( bool fullRefresh ) = 0;
     virtual void draw( bool __attribute__((unused)) fullRefresh ){}
@@ -66,6 +65,9 @@ public:
     virtual const Rectangle& dimensions() const = 0;
     virtual Rectangle& dimensions() = 0;
     virtual void refreshDimensions() = 0;
+
+    virtual void setBorderStyle( BoxStyle style ) = 0;
+    virtual BoxStyle borderStyle( ) = 0;
 
     virtual void setSizeLimits( const SizeLimits& limits ) = 0;
     virtual const SizeLimits& sizeLimits() const = 0;

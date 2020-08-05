@@ -29,26 +29,30 @@
 #include "Direction.hpp"
 #include "Log.hpp"
 #include "Rectangle.hpp"
-#include "Border.hpp"
-#include <unicode/unistr.h>
+#include "BoxStyle.hpp"
+#include <vector>
 
 namespace cursed{
 
+using ccstring = std::vector<cchar_t>;
 
 class Draw{
 public:
     Point getCursorPosition( IWindow* win );
-
-    static void box( IWindow* win, Rectangle );
-    static void line( IWindow* win, Direction d, int pos, char c );
-    static void line( IWindow* win, Direction d, Point start, int len, char c );
+    static void box( IWindow* win, Rectangle, BoxStyle style = BoxStyle::RoundedCorners );
+    static void line( IWindow* win, Direction d, int pos, wchar_t c );
+    static void line( IWindow* win, Direction d, Point start, int len, wchar_t c );
     static void moveCursor( IWindow* win, Point position );
     static void character( IWindow* win, Point position, char data );
     static void wcharacter( IWindow* win, Point position, wchar_t data );
     static void text( IWindow* win, Point start, const char* data, size_t len );
-    static void textLine( IWindow* win, Point start, const icu::UnicodeString& );
+    static void textLine( IWindow* win, Point start, const ccstring& );
     static void text( IWindow* win, Point start, const std::string& data );
+    static void text( IWindow* win, Point start, const std::wstring& data );
     static void printf( IWindow* win, Point start, const char* fmt, ... ) GCC_PRINTFLIKE(3,4);
+    static std::vector<cchar_t> convert( const std::wstring& wstr, const attr_t attrs, short colorPair );
+
+    static void drawBorder( IWindow* win, BoxStyle boxStyle );
 
     struct AttributeGuard{
         AttributeGuard( IWindow* window, unsigned long flags );

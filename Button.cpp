@@ -33,6 +33,7 @@ namespace cursed{
         _text(text)
     { 
         connectActions();
+        setBorderStyle( BoxStyle::RoundedCorners );
     }
 
 void Button::connectActions(){
@@ -52,7 +53,7 @@ void Button::connectActions(){
     constexpr int leftButton = 1;
     signals.clicked.connect([&]( int mouseButton ){ 
         setPressedAndRedraw( this );
-        addDelayedAction( std::chrono::milliseconds(200),[&]{
+        addDelayedAction( std::chrono::milliseconds(this->reactionDelay()),[&]{
             unsetPressedAndRedraw(this);
         }); 
     }, {leftButton} );
@@ -63,17 +64,21 @@ void Button::connectActions(){
 
     signals.doubleClicked.connect([&]( int mouseButton ){
         setPressedAndRedraw(this);
-        addDelayedAction( std::chrono::milliseconds(200),[&]{
+        addDelayedAction( std::chrono::milliseconds(this->reactionDelay()),[&]{
             unsetPressedAndRedraw(this);
         }); 
     }, {leftButton} );
 
     signals.tripleClicked.connect([&]( int mouseButton ){
         setPressedAndRedraw(this);
-        addDelayedAction( std::chrono::milliseconds(200),[&]{
+        addDelayedAction( std::chrono::milliseconds(this->reactionDelay()),[&]{
             unsetPressedAndRedraw(this);
         }); 
     }, {leftButton} );
+}
+
+int Button::reactionDelay() const{
+    return _reactionDelay;
 }
 
 void Button::draw( bool fullRefresh ){
@@ -83,9 +88,14 @@ void Button::draw( bool fullRefresh ){
 
         Rectangle dim = dimensions();
 
+        // clear button
         for( int y = 0; y < dim.size.height; ++y ){
             Draw::line( this, Direction::Horizontal, y, ' ');
         }
+
+        Rectangle boxDim{ {0,0}, dim.size };
+        Draw::box( this, boxDim, borderStyle() );
+
 
         int midw = dim.size.width / 2;
         int midy = dim.size.height / 2;

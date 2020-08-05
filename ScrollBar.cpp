@@ -55,6 +55,8 @@ namespace cursed{
         } ),
         _layoutDirection( layoutDirection )
     { 
+        _decreaseButton->setBorderStyle( BoxStyle::None );
+        _increaseButton->setBorderStyle( BoxStyle::None );
         {
             SizeLimits limits = sizeLimits();
             limits.minimum.getDimension( layoutDirection ) = 3; // one per button, one for value indicator.
