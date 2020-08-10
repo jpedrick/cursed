@@ -26,18 +26,20 @@
 
 #include "MouseEventWindow.hpp"
 #include "Signal.hpp"
+#include "Color.hpp"
+
 #include <functional>
 
 namespace cursed{
 
 
 struct ProgressBarColors{
-    unsigned long progressNormal;
-    unsigned long progressPressed;
-    unsigned long remainingNormal;
-    unsigned long remainingPressed;
-    unsigned long handleForeground;
-    unsigned long handleBackground;
+    Color progressNormal = Color{ 0, 0, 1000 };
+    Color progressPressed = Color{ 0, 0, 500 };
+    Color remainingNormal = Color{ 0, 500, 1000 };
+    Color remainingPressed = Color{ 0, 500, 500 };
+    Color handleForeground = Color{ 1000, 1000, 1000 };
+    Color handleBackground = Color{ 500, 500, 500 };
 };
 
 struct Int64ValueRange{ 
@@ -46,11 +48,15 @@ struct Int64ValueRange{
 
     static double getPercent( int64_t value, const Int64ValueRange& range );
     static int64_t getRange( const Int64ValueRange& range );
+
+    int64_t clip( int64_t v ) const {
+        return std::min( max, std::max( min, v ) );
+    }
 };
 struct ProgressBarConstructorArgs{
-    int64_t value;
-    Int64ValueRange range;
-    ProgressBarColors colors;
+    int64_t value = 0;
+    Int64ValueRange range = {0,100};
+    ProgressBarColors colors = {};
 };
 
 class ProgressBar : public MouseEventWindow{
@@ -77,7 +83,7 @@ public:
         Clicked clicked;
     } progressBarSignals;
 
-    void setValue( int64_t v );
+    int64_t setValue( int64_t v );
 
     int64_t value() const{ return _value; }
 

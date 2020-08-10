@@ -81,6 +81,9 @@ public:
     bool canAquireFocus() const override { return false; }
     void setDebug(){ _debug = true; }
 
+    void setShow( bool val ) override{ _show = val; }
+    bool show() const override{ return _show; }
+
 protected: 
     void setDrawWindowDelegate( IDrawWindowDelegate* delegate ) override { _drawingDelegate = delegate; }
     IDrawWindowDelegate* drawWidowDelegate() override { return _drawingDelegate; }
@@ -90,7 +93,6 @@ protected:
     void destroy();
     BoxLayout& layout(){ return _layout; }
     bool debug() const override{ return _debug; }
-    bool show() const override { return true; }
 
 private:
     IWindow* _parent = nullptr;
@@ -102,6 +104,7 @@ private:
     std::string _name;
     int _layoutRatio = 1;
     bool _debug = false;
+    bool _show = true;
     BoxStyle _borderStyle = BoxStyle::None;
 };
 

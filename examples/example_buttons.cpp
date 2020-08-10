@@ -30,6 +30,7 @@
 #include "Button.hpp"
 #include "Label.hpp"
 #include "ScrollBar.hpp"
+#include "ProgressBar.hpp"
 #include <fstream>
 
 int main( int __attribute__((unused))argc, char* __attribute__((unused))argv[] ){
@@ -45,9 +46,12 @@ int main( int __attribute__((unused))argc, char* __attribute__((unused))argv[] )
     Label* label = nullptr;
     ScrollBar* hscroller = nullptr;
     ScrollBar* vscroller = nullptr;
+    ProgressBar* progressBar = nullptr;
+
     Application app{ Direction::Vertical, {
         { 0, label = new Label{ "some text for a label" } }, 
         { 1, hscroller = new ScrollBar{ Direction::Horizontal, "horizontal-scroll" } }, 
+        { 1, progressBar = new ProgressBar{ Direction::Horizontal, { 10, { 1, 20 }, {} }, "progress-bar" } },
         { 10, new Window{ 
             Direction::Horizontal, "button-window",
             { 
@@ -65,6 +69,18 @@ int main( int __attribute__((unused))argc, char* __attribute__((unused))argv[] )
             }
         }}
     }};
+
+    const cursed::Color red    = {1000,    0 ,   0 };
+    const cursed::Color mutedGreen  = {   250, 500, 300 };
+    const cursed::Color darkGreen  = {   0, 500 ,   0 };
+    const cursed::Color blue   = {   0,    0 ,1000 };
+    const cursed::Color darkblue  = {   0,    0 ,200 };
+    const cursed::Color yellow = {  600, 600 ,   0 };
+
+    const cursed::Color bluegrey = { 200,  200, 300 };
+    const cursed::Color bluewhite= { 900,  900,1000 };
+    const cursed::Color nearblack= {  50,   50,  50 };
+
 
     {
         SizeLimits limits = label->sizeLimits();
@@ -100,17 +116,6 @@ int main( int __attribute__((unused))argc, char* __attribute__((unused))argv[] )
     b3->setSizeLimits( SizeLimits::unlimited() );
     b4->setSizeLimits( SizeLimits::unlimited() );
 
-    const cursed::Color red    = {1000,    0 ,   0 };
-    const cursed::Color mutedGreen  = {   250, 500, 300 };
-    const cursed::Color darkGreen  = {   0, 500 ,   0 };
-    const cursed::Color blue   = {   0,    0 ,1000 };
-    const cursed::Color darkblue  = {   0,    0 ,200 };
-    const cursed::Color yellow = {  600, 600 ,   0 };
-
-    const cursed::Color bluegrey = { 200,  200, 300 };
-    const cursed::Color bluewhite= { 900,  900,1000 };
-    const cursed::Color nearblack= {  50,   50,  50 };
-
     cursed::ColorPair labelColor{ bluegrey, darkblue };
     label->setColor( labelColor );
 
@@ -140,24 +145,28 @@ int main( int __attribute__((unused))argc, char* __attribute__((unused))argv[] )
     cursed::ColorPair b4Pressed{ blue, yellow };
     b4->setColors(b4Normal, b4Pressed);
 
-    b1->signals.clicked.connect([label]( int mouseButton ){ label->setText( "b1 clicked with mouseButton: " + std::to_string(mouseButton) ); });
-    b1->signals.doubleClicked.connect([label]( int mouseButton ){ label->setText( "b1 double-clicked with mouseButton: " + std::to_string(mouseButton) ); });
-    b1->signals.tripleClicked.connect([label]( int mouseButton ){ label->setText( "b1 triple-clicked with mouseButton: " + std::to_string(mouseButton) ); });
+    b1->signals.clicked.connect([label]( MouseButton button, Point ){ label->setText( "b1 clicked with mouseButton: " + std::to_string((int)button) ); });
+    b1->signals.doubleClicked.connect([label]( MouseButton button, Point ){ label->setText( "b1 double-clicked with mouseButton: " + std::to_string((int)button) ); });
+    b1->signals.tripleClicked.connect([label]( MouseButton button, Point ){ label->setText( "b1 triple-clicked with mouseButton: " + std::to_string((int)button) ); });
 
-    b1->signals.pressed.connect([&]( int mouseButton ){ label->setText( "pressed b1 with mouseButton " + std::to_string(mouseButton) ); app.refresh(); });
-    b1->signals.released.connect([&]( int mouseButton ){ label->setText( "released b1" ); app.refresh(); });
+    b1->signals.pressed.connect([&]( MouseButton button, Point ){ label->setText( "pressed b1 with mouseButton " + std::to_string((int)button) ); app.refresh(); });
+    b1->signals.released.connect([&]( MouseButton, Point ){ label->setText( "released b1" ); app.refresh(); });
 
-    b2->signals.clicked.connect([&]( int mouseButton ){ label->setText( "b2 clicked " ); });
-    b2->signals.pressed.connect([&]( int mouseButton ) { label->setText( "b2 pressed" ); });
-    b2->signals.released.connect([&]( int mouseButton ){ label->setText( "b2 released" ); });
+    b2->signals.clicked.connect([&]( MouseButton, Point ){ label->setText( "b2 clicked " ); });
+    b2->signals.pressed.connect([&]( MouseButton, Point ) { label->setText( "b2 pressed" ); });
+    b2->signals.released.connect([&]( MouseButton, Point ){ label->setText( "b2 released" ); });
 
-    b3->signals.clicked.connect([&]( int mouseButton ){ label->setText( "b3 clicked " ); });
-    b3->signals.pressed.connect([&]( int mouseButton ){ label->setText( "b3 pressed" ); });
-    b3->signals.released.connect([&]( int mouseButton ){ label->setText( "b3 released" ); });
+    b3->signals.clicked.connect([&]( MouseButton, Point ){ label->setText( "b3 clicked " ); });
+    b3->signals.pressed.connect([&]( MouseButton, Point ){ label->setText( "b3 pressed" ); });
+    b3->signals.released.connect([&]( MouseButton, Point ){ label->setText( "b3 released" ); });
 
-    b4->signals.clicked.connect([&]( int mouseButton ){ label->setText( "b4 clicked " ); });
-    b4->signals.pressed.connect([&]( int mouseButton ){ label->setText( "b4 pressed" ); });
-    b4->signals.released.connect([&]( int mouseButton ){ label->setText( "b4 released" ); });
+    b4->signals.clicked.connect([&]( MouseButton, Point ){ label->setText( "b4 clicked " ); });
+    b4->signals.pressed.connect([&]( MouseButton, Point ){ label->setText( "b4 pressed" ); });
+    b4->signals.released.connect([&]( MouseButton, Point ){ label->setText( "b4 released" ); });
+
+    progressBar->progressBarSignals.clicked.connect( [progressBar]( ProgressBar::Area area, MouseButton ){
+        progressBar->adjustValue( area == ProgressBar::Area::Value ? -1 : 1 );
+    } );
 
     hscroller->signals.valueChanged.connect([&]( ScrollBar::NewValue newVal, ScrollBar::OldValue oldVal ){
         std::stringstream ss;

@@ -28,7 +28,7 @@
 namespace cursed{
 
 namespace{
-    constexpr std::array<int,3> _buttons = { 1, 2, 3 };
+    constexpr std::array<MouseButton,3> _buttons = { MouseButton::Button1, MouseButton::Button2, MouseButton::Button3 };
 }
 
 MouseEventWindow::MouseEventWindow( Direction layout, const std::string& name, std::initializer_list<LayoutObject> children ) : 
@@ -48,49 +48,54 @@ void MouseEventWindow::onMouseInput( const Point& relative, MouseButtonEvent& e 
         e._consumed = true;
     }
 
-    if( moved && contained ){ 
-        signals.mouseDrag.emit( _lastPosition, relative );
-        _lastPosition = relative;
-    }
-
-    bool pressed[ _buttons.size() ] = { false };
-    bool released[ _buttons.size() ] = { false };
     for ( auto button : _buttons ){
-        bool clicked  = e.mouseKeyEvent( button, MouseButtonEventType::Clicked );
-        bool clicked2 = e.mouseKeyEvent( button, MouseButtonEventType::DoubleClicked );
-        bool clicked3 = e.mouseKeyEvent( button, MouseButtonEventType::TripleClicked );
+        bool clicked  = e.mouseKeyEvent( (int)button, MouseButtonEventType::Clicked );
+        bool clicked2 = e.mouseKeyEvent( (int)button, MouseButtonEventType::DoubleClicked );
+        bool clicked3 = e.mouseKeyEvent( (int)button, MouseButtonEventType::TripleClicked );
 
-        pressed[button]  = e.mouseKeyEvent( button, MouseButtonEventType::Pressed );
-        released[button] = _pressed[button] && !pressed[button] ? true : false;
-        if( pressed[button] ){
+        bool pressed  = e.mouseKeyEvent( (int)button, MouseButtonEventType::Pressed );
+        bool alreadyPressed = _pressed[(int)button];
+        bool released = alreadyPressed && !pressed ? true : false;
+
+        if( pressed && !alreadyPressed ){
+            _lastDrag[(int)button] = relative;
+        }
+
+        if( moved && contained && alreadyPressed && /*still*/ pressed && _lastDrag[(int)button] != relative ){ 
+            signals.mouseDrag.emit( button, _lastDrag[(int)button], relative );
+            _lastDrag[(int)button] = relative;
+        }
+
+        if( pressed ){
             onMouseButtonPressed( button, contained, relative );
         }
-        if( released[button] || !contained ){
-            onMouseButtonReleased( button );
+
+        if( released || !contained ){
+            onMouseButtonReleased( button, relative );
         }
 
         if( contained && clicked ){
-            signals.clicked( button );
+            signals.clicked( button, relative );
         }
 
         if( contained && clicked2 ){
-            signals.doubleClicked( button );
+            signals.doubleClicked( button, relative );
         }
 
         if( contained && clicked3 ){
-            signals.tripleClicked( button );
+            signals.tripleClicked( button, relative );
         }
     }
 
     if( contained && !_mouseContained ){
         _mouseContained = true;
-        signals.mouseEnter();
+        signals.mouseEnter( relative );
         _lastPosition = relative;
     }
 
     if( !contained && _mouseContained ){
         _mouseContained = false;
-        signals.mouseExit();
+        signals.mouseExit( relative );
     }
 
     if( _mouseContained && _lastPosition != relative ){
@@ -101,23 +106,23 @@ void MouseEventWindow::onMouseInput( const Point& relative, MouseButtonEvent& e 
     Window::onMouseInput( relative, e );
 }
 
-void MouseEventWindow::onMouseButtonPressed( int button, bool contained, const Point& relativePos ){
+void MouseEventWindow::onMouseButtonPressed( MouseButton button, bool contained, const Point& relativePos ){
     if( contained ){
-        if( !_pressed[button] ){
-            _pressed[button] = true;
-            signals.pressed( button );
-            _pressedPoint[button] = relativePos;
+        if( !_pressed[(int)button] ){
+            _pressed[(int)button] = true;
+            signals.pressed( button, relativePos );
+            _pressedPoint[(int)button] = relativePos;
         }
     }
     else {
-        onMouseButtonReleased( button );
+        onMouseButtonReleased( button, relativePos );
     }
 }
 
-void MouseEventWindow::onMouseButtonReleased( int button ){
-    if( _pressed[button] ){
-        _pressed[button] = false;
-        signals.released( button );
+void MouseEventWindow::onMouseButtonReleased( MouseButton button, const Point& relativePos ){
+    if( _pressed[(int)button] ){
+        _pressed[(int)button] = false;
+        signals.released( button, relativePos );
     }
 }
 

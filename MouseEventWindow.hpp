@@ -28,19 +28,30 @@
 #include <functional>
 
 namespace cursed{
+
+enum class MouseButton : int {
+    Button1 = 1,
+    Button2 = 2,
+    Button3 = 3,
+    Left = Button1,
+    Right = Button3,
+    Center = Button2
+};
+
 class MouseEventWindow : public Window{
 public:
     MouseEventWindow( Direction layout = Direction::Vertical, const std::string& n = "", std::initializer_list<LayoutObject> children = {} );
 
     MouseEventWindow( const MouseEventWindow& ) = delete;
 
-    struct Pressed : public Signal<int>{};
-    struct Released : public Signal<int>{};
-    struct Clicked : public Signal<int>{};
-    struct MouseDrag : public Signal< Point signal_field(start), Point signal_field(current) >{};
+    struct Pressed : public Signal<MouseButton, Point>{};
+    struct Released : public Signal<MouseButton, Point>{};
+    struct Clicked : public Signal<MouseButton, Point>{};
+
+    struct MouseDrag : public Signal< MouseButton, Point signal_field(start), Point signal_field(current) >{};
     struct MouseMove : public Signal< Point signal_field(start), Point signal_field(current) >{};
-    struct MouseEnter : public Signal<>{};
-    struct MouseExit : public Signal<>{};
+    struct MouseEnter : public Signal<Point>{};
+    struct MouseExit : public Signal<Point>{};
 
     struct : Window {
         Pressed pressed;
@@ -57,9 +68,9 @@ public:
     void onMouseInput( const Point& relative, MouseButtonEvent& e ) override;
 
 protected:
-    bool mouseButtonPressed( int button );
-    void onMouseButtonPressed( int button, bool contained, const Point& relativePos );
-    void onMouseButtonReleased( int button );
+    bool mouseButtonPressed( MouseButton button );
+    void onMouseButtonPressed( MouseButton button, bool contained, const Point& relativePos );
+    void onMouseButtonReleased( MouseButton button, const Point& relativePos );
 private:
     std::string _text;
     bool _pressed[4] = {false};
@@ -71,6 +82,7 @@ private:
     } visualProperties;
     Point _pressedPoint[4] = {};
     Point _lastPosition;
+    Point _lastDrag[4] = {};
 };
 
 }

@@ -39,6 +39,7 @@ using ccstring = std::vector<cchar_t>;
 class Draw{
 public:
     Point getCursorPosition( IWindow* win );
+    static void filledBlock( IWindow* win, const Rectangle& dimensions, wchar_t c = ' ' );
     static void box( IWindow* win, Rectangle, BoxStyle style = BoxStyle::RoundedCorners );
     static void line( IWindow* win, Direction d, int pos, wchar_t c );
     static void line( IWindow* win, Direction d, Point start, int len, wchar_t c );

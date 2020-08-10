@@ -89,6 +89,7 @@ public:
     virtual bool canAquireFocus() const =  0;
 
     virtual bool show() const = 0;
+    virtual void setShow( bool val ) = 0;
     virtual void addDelayedAction( std::chrono::milliseconds delay, std::function<void()> action ){
         if( parent() ){
             parent()->addDelayedAction( delay, action );

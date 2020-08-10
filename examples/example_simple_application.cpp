@@ -277,11 +277,11 @@ int main( int unused(argc), char* unused(argv[]) ){
     button1->setColors( buttonNormal, buttonPressed );
     button2->setColors( buttonNormal, buttonPressed );
 
-    auto button1ClickedToken = button1->signals.clicked.connect([&]( int mouseButton ){ 
+    auto button1ClickedToken = button1->signals.clicked.connect([&]( MouseButton mouseButton, Point ){ 
         listModel.setText( "🌴", listModel.index(0), 0 );
     });
 
-    button2->signals.clicked.connect([&]( int mouseButton ){ 
+    button2->signals.clicked.connect([&]( MouseButton, Point ){ 
         listModel.setText( "🌳", listModel.index(0), 0 );
     });
 

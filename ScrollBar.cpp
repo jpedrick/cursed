@@ -65,40 +65,42 @@ namespace cursed{
             setSizeLimits( limits );
         }
 
-        constexpr int actionButton = 1;
+        constexpr auto actionButton = MouseButton::Left;
+        Button::Clicked::optional_filter_tuple leftButtonFilter{ MouseButton::Left, {} };
 
         // double and triple click events allow fast clicking the scroll buttons
-        auto decreaseValue = [&]( int ){ incrementValue(-1); };
-        auto increaseValue = [&]( int ){ incrementValue(1); };
-        _decreaseButton->signals.clicked.connect( decreaseValue, {actionButton}  );
-        _decreaseButton->signals.doubleClicked.connect( [&]( int ){ incrementValue(-2); }, {actionButton}  );
-        _decreaseButton->signals.tripleClicked.connect( [&]( int ){ incrementValue(-3); }, {actionButton}  );
-        _decreaseButton->signals.released.connect( decreaseValue, {actionButton}  );
+        auto decreaseValue = [&]( MouseButton, Point ){ incrementValue(-1); };
+        auto increaseValue = [&]( MouseButton, Point ){ incrementValue(1); };
 
-        _increaseButton->signals.clicked.connect( increaseValue, {actionButton}  );
-        _increaseButton->signals.doubleClicked.connect( [&]( int ){ incrementValue(2); }, {actionButton}  );
-        _increaseButton->signals.tripleClicked.connect( [&]( int ){ incrementValue(3); }, {actionButton}  );
-        _increaseButton->signals.released.connect( increaseValue, {actionButton}  );
+        auto largeDecrease = [&](  MouseButton, Point ){ incrementValue( -_buttonIncrement ); };
+        auto doubleLargeDecrease = [&]( MouseButton, Point ){ incrementValue( -_buttonIncrement * 2 ); };
+        auto tripleLargeDecrease = [&]( MouseButton, Point ){ incrementValue( -_buttonIncrement * 3 ); };
 
-        auto largeDecrease = [&]( int mouseButton ){ incrementValue( -_buttonIncrement ); };
-        auto doubleLargeDecrease = [&]( int mouseButton ){ incrementValue( -_buttonIncrement * 2 ); };
-        auto tripleLargeDecrease = [&]( int mouseButton ){ incrementValue( -_buttonIncrement * 3 ); };
+        auto largeIncrease = [&]( MouseButton, Point ){ incrementValue( _buttonIncrement ); };
+        auto doubleLargeIncrease = [&]( MouseButton, Point ){ incrementValue( _buttonIncrement * 2 ); };
+        auto tripleLargeIncrease = [&]( MouseButton, Point ){ incrementValue( _buttonIncrement * 3 ); };
 
-        auto largeIncrease = [&]( int mouseButton ){ incrementValue( _buttonIncrement ); };
-        auto doubleLargeIncrease = [&]( int mouseButton ){ incrementValue( _buttonIncrement * 2 ); };
-        auto tripleLargeIncrease = [&]( int mouseButton ){ incrementValue( _buttonIncrement * 3 ); };
+        _decreaseButton->signals.clicked.connect( decreaseValue, leftButtonFilter );
+        _decreaseButton->signals.doubleClicked.connect( [&]( MouseButton, Point ){ incrementValue(-2); }, leftButtonFilter );
+        _decreaseButton->signals.tripleClicked.connect( [&]( MouseButton, Point ){ incrementValue(-3); }, leftButtonFilter );
+        _decreaseButton->signals.released.connect( decreaseValue, leftButtonFilter );
 
-        _aboveValueButton->signals.clicked.connect(largeDecrease, {actionButton} );
-        _aboveValueButton->signals.doubleClicked.connect(doubleLargeDecrease, {actionButton} );
-        _aboveValueButton->signals.tripleClicked.connect(tripleLargeDecrease, {actionButton} );
-        _aboveValueButton->signals.released.connect(largeDecrease, {actionButton} );
+        _increaseButton->signals.clicked.connect( increaseValue, {actionButton, {}}  );
+        _increaseButton->signals.doubleClicked.connect( [&]( MouseButton, Point ){ incrementValue(2); }, leftButtonFilter );
+        _increaseButton->signals.tripleClicked.connect( [&]( MouseButton, Point ){ incrementValue(3); }, leftButtonFilter );
+        _increaseButton->signals.released.connect( increaseValue, leftButtonFilter );
 
-        _belowValueButton->signals.clicked.connect(largeIncrease, {actionButton} );
-        _belowValueButton->signals.doubleClicked.connect(doubleLargeIncrease, {actionButton} );
-        _belowValueButton->signals.tripleClicked.connect(tripleLargeIncrease, {actionButton} );
-        _belowValueButton->signals.released.connect(largeIncrease, {actionButton} );
+        _aboveValueButton->signals.clicked.connect(largeDecrease, leftButtonFilter );
+        _aboveValueButton->signals.doubleClicked.connect(doubleLargeDecrease, leftButtonFilter );
+        _aboveValueButton->signals.tripleClicked.connect(tripleLargeDecrease, leftButtonFilter );
+        _aboveValueButton->signals.released.connect(largeDecrease, leftButtonFilter );
 
-        _valueIndicator->signals.mouseDrag.connect( [&]( Point start, Point current ){
+        _belowValueButton->signals.clicked.connect(largeIncrease, leftButtonFilter );
+        _belowValueButton->signals.doubleClicked.connect(doubleLargeIncrease, leftButtonFilter );
+        _belowValueButton->signals.tripleClicked.connect(tripleLargeIncrease, leftButtonFilter );
+        _belowValueButton->signals.released.connect(largeIncrease, leftButtonFilter );
+
+        _valueIndicator->signals.mouseDrag.connect( [&]( MouseButton button, Point start, Point current ){
             int stVal = start.getPosition( layoutDirection );
             int curVal = current.getPosition( layoutDirection );
 
@@ -109,7 +111,7 @@ namespace cursed{
             int64_t perCell = _maxValue / size;
 
             this->incrementValue( diff * perCell );
-        } );
+        }, { MouseButton::Left, {}, {} } );
         {
             SizeLimits limits = _valueIndicator->sizeLimits();
             limits.minimum.width = 1;

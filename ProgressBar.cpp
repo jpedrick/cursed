@@ -13,10 +13,10 @@ ProgressBar::ProgressBar( Direction layout,
 {
     signals.clicked.connect( [&]( MouseButton button, Point relativePos ){
         if( _filledArea.contains( relativePos ) ){
-            //signals.progressAreaClicked.emit( Area::Value, button );
+            progressBarSignals.clicked.emit( Area::Value, button );
         }
         else if( _unfilledArea.contains( relativePos ) ){
-            //signals.remainingAreaClicked.emit( Area::Remaining, button );
+            progressBarSignals.clicked.emit( Area::Remaining, button );
         }
     }, { MouseButton::Left, {} } );
 }
@@ -34,15 +34,24 @@ int64_t Int64ValueRange::getRange( const Int64ValueRange& range ){
     return range.max - range.min;
 }
 
-void ProgressBar::setValue( int64_t v ){
-    progressBarSignals.valueChanged.emitAfter( [this, v]{
-        this->_value = v;
-        draw( true );
-    }, v, _value );
+int64_t ProgressBar::setValue( int64_t v ){
+    const auto oldValue = value();
+    _value = _valueRange.clip( v );
+    draw( true );
+
+    progressBarSignals.valueChanged( v, oldValue );
+
+    return _value;
 }
 
 void ProgressBar::setValueRange( const Int64ValueRange& valueRange ){
     _valueRange = valueRange;
+
+    setValue( value() ); //< in case value gets clipped, will also redraw
+}
+
+int64_t ProgressBar::adjustValue( int64_t change ){
+    return setValue( change + value() );
 }
 
 void ProgressBar::draw( bool fullRefresh ){
@@ -56,18 +65,32 @@ void ProgressBar::draw( bool fullRefresh ){
         { // Filled portion(part that repesents "progress")
             _filledArea = dim;
             _filledArea.size.getDimension(_layoutDirection) = filledSize;
-            Draw::AttributeGuard ag{ this, _colors.progressNormal };
-            Draw::filledBlock( this, _filledArea );
+            _filledArea.topLeft = Point{ 0, 0, dim.topLeft.z };
+            //Draw::AttributeGuard ag{ this, ColorPair{ _colors.progressNormal, _colors.progressPressed } };
+            //Draw::filledBlock( this, _filledArea );
+
+            // clear button
+            for( int i = 0; i < _filledArea.size.getDimension( _layoutDirection ); ++i ){
+                Draw::line( this, other( _layoutDirection ), i, ' ');
+            }
         }
 
         { // Filled portion(part that repesents "remaining")
             _unfilledArea = dim;
             _unfilledArea.size.getDimension(_layoutDirection) = unfilledSize;
+            _unfilledArea.topLeft = _filledArea.topLeft;
             _unfilledArea.topLeft.getPosition(_layoutDirection) += filledSize;
-            Draw::AttributeGuard ag{ this, _colors.progressNormal };
-            Draw::filledBlock( this, _unfilledArea );
-        }
+            //Draw::AttributeGuard ag{ this, ColorPair{ _colors.remainingNormal, _colors.remainingPressed } };
+            //Draw::filledBlock( this, _unfilledArea );
 
+            // clear button
+            for( int i = 0; i < _unfilledArea.size.getDimension( _layoutDirection ); ++i ){
+                Draw::line( this, other( _layoutDirection ), i + filledSize, ' ');
+            }
+        }
+        
+        Draw::line( this, other(_layoutDirection ), filledSize, _layoutDirection == Direction::Vertical ? '-' : '|' );
+        ::refresh();
     }
 }
 }

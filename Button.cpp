@@ -33,12 +33,12 @@ namespace cursed{
         _text(text)
     { 
         connectActions();
-        setBorderStyle( BoxStyle::RoundedCorners );
+        setBorderStyle( BoxStyle::Fancy2 );
     }
 
 void Button::connectActions(){
-    signals.pressed.connect([&]( int mouseButton ){
-        if( mouseButton == 1 ){
+    signals.pressed.connect([&]( MouseButton mouseButton, Point relPos ){
+        if( mouseButton == MouseButton::Button1 ){
             _pressed = true; draw(true); ::refresh();
         }
     });
@@ -51,30 +51,30 @@ void Button::connectActions(){
     };
 
     constexpr int leftButton = 1;
-    signals.clicked.connect([&]( int mouseButton ){ 
+    signals.clicked.connect([&]( MouseButton, Point ){ 
         setPressedAndRedraw( this );
         this->addDelayedAction( std::chrono::milliseconds(this->reactionDelay()),[&]{
             unsetPressedAndRedraw(this);
         }); 
-    }, {leftButton} );
+    }, { MouseButton::Button1,{} } );
 
-    signals.released.connect([&]( int mouseButton ){ 
+    signals.released.connect([&]( MouseButton, Point ){ 
         unsetPressedAndRedraw(this);
-    }, {leftButton} );
+    }, {MouseButton::Button1,{}} );
 
-    signals.doubleClicked.connect([&]( int mouseButton ){
+    signals.doubleClicked.connect([&]( MouseButton, Point ){
         setPressedAndRedraw(this);
         addDelayedAction( std::chrono::milliseconds(this->reactionDelay()),[&]{
             unsetPressedAndRedraw(this);
         }); 
-    }, {leftButton} );
+    }, {MouseButton::Left,{}} );
 
-    signals.tripleClicked.connect([&]( int mouseButton ){
+    signals.tripleClicked.connect([&]( MouseButton, Point ){
         setPressedAndRedraw(this);
         addDelayedAction( std::chrono::milliseconds(this->reactionDelay()),[&]{
             unsetPressedAndRedraw(this);
         }); 
-    }, {leftButton} );
+    }, {MouseButton::Left,{}} );
 }
 
 int Button::reactionDelay() const{
@@ -88,9 +88,11 @@ void Button::draw( bool fullRefresh ){
 
         Rectangle dim = dimensions();
 
-        // clear button
-        for( int y = 0; y < dim.size.height; ++y ){
-            Draw::line( this, Direction::Horizontal, y, ' ');
+        if ( fullRefresh ){
+            // clear button
+            for( int y = 0; y < dim.size.height; ++y ){
+                Draw::line( this, Direction::Horizontal, y, ' ');
+            }
         }
 
         Rectangle boxDim{ {0,0}, dim.size };

@@ -55,9 +55,6 @@ public:
     void setButtonColors( unsigned long normal, unsigned long pressed );
     void setIndicatorColors( unsigned long normal, unsigned long pressed );
 
-    void setShow( bool val ){ _show = val; }
-    bool show() const override{ return _show; }
-
     void refreshDimensions() override;
 
     Button& increaseButton();
@@ -74,8 +71,6 @@ private:
     int64_t _maxValue;
     int64_t _buttonIncrement = 1;
     Direction _layoutDirection;
-    bool _show = true;
-
 };
 
 }

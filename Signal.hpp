@@ -27,6 +27,7 @@
 #include <unordered_map>
 #include <memory>
 #include <optional>
+#include <type_traits>
 
 namespace cursed{
 
@@ -59,9 +60,25 @@ namespace cursed{
     };
 
     template< typename... ARGS >
+    using OptionalFilterTuple = typename std::tuple< typename std::optional< typename std::decay<ARGS>::type>...>;
+
+
+    template< typename... ARGS, size_t... Index >
+    bool filter_matches( const OptionalFilterTuple<ARGS...>& filter, const std::tuple<ARGS...>& value, std::index_sequence<Index...> const& ){
+        bool matches = ( ( std::get<Index>(filter) ? *std::get<Index>(filter) == std::get<Index>(value) : true ) && ... );
+
+        return matches;
+    }
+
+    template< typename... ARGS >
+    bool filter_matches( const OptionalFilterTuple<ARGS...>& filter, const std::tuple<ARGS...>& value ){
+        return filter_matches( filter, value, std::make_index_sequence<sizeof...(ARGS)>() );
+    }
+
+    template< typename... ARGS >
     struct Signal {
-        using args_tuple = std::tuple< typename std::decay<ARGS>::type...>; 
-        using optional_args_tuple = std::tuple< typename std::optional< typename std::decay<ARGS>::type>...>; 
+        using filter_tuple = std::tuple< typename std::decay<ARGS>::type...>; 
+        using optional_filter_tuple = std::tuple< typename std::optional< typename std::decay<ARGS>::type>...>; 
         using slot_function = std::function<void( ARGS... ) >;
 
         struct ConnectionToken : public IConnectionToken {
@@ -120,19 +137,14 @@ namespace cursed{
             return token;
         }
 
-        std::shared_ptr<IConnectionToken> connect( slot_function f, const args_tuple& filter ){ 
+        std::shared_ptr<IConnectionToken> connect( slot_function f, const optional_filter_tuple& filter ){ 
             auto filteredFunction = [f,filter]( ARGS&&... args ){
-                if( args_tuple( std::forward<ARGS>(args)... ) == filter ){
+                if( filter_matches( filter, std::make_tuple( std::forward< typename std::remove_reference<ARGS>::type>(args)... ) ) ){
                     f( std::forward<ARGS>(args)... );
                 }
             };
 
             return connect( filteredFunction );
-        }
-
-        // TODO: optional args comparison, if optional not set, skip from evaluation.
-        std::shared_ptr<IConnectionToken> partial_connect( slot_function f, const optional_args_tuple& filter ){ 
-            return {};
         }
 
 
@@ -146,12 +158,19 @@ namespace cursed{
         }
 
         template< typename... CALLARGS >
+        void emitAfter( const std::function<void()>& preEmit, CALLARGS&&... args ){
+            // Delegate to internal function to ensure references are removed prior to preEmit's invocation
+            // this allows you to avoid creating temporary variables for new/old value-changed type signals
+            emitAfterInternal< typename std::remove_reference<CALLARGS>::type... >( preEmit, args... );
+        }
+
+        template< typename... CALLARGS >
         void operator()( CALLARGS&&... args ){
             emit( std::forward<CALLARGS>(args)... );
         }
 
-
     protected:
+
         void add( const IConnectionToken::pointer& token ) { 
             if( token ){
                 _tokens.emplace( token->key(), token );
@@ -182,6 +201,12 @@ namespace cursed{
         }
 
     private:
+        template< typename... CALLARGS >
+        void emitAfterInternal( const std::function<void()>& preEmit, typename std::remove_reference<CALLARGS>::type... args ){
+            preEmit();
+            emit( std::forward<CALLARGS>(args)... );
+        }
+
         std::unordered_map<uint64_t, slot_function> _slots;
         bool _blocked = false;
         bool _destructing = false;
