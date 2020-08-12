@@ -51,7 +51,7 @@ int main( int __attribute__((unused))argc, char* __attribute__((unused))argv[] )
     Application app{ Direction::Vertical, {
         { 0, label = new Label{ "some text for a label" } }, 
         { 1, hscroller = new ScrollBar{ Direction::Horizontal, "horizontal-scroll" } }, 
-        { 1, progressBar = new ProgressBar{ Direction::Horizontal, { 10, { 1, 20 }, {} }, "progress-bar" } },
+        { 1, progressBar = new ProgressBar{ Direction::Horizontal, { 10, { 1, 20 } }, "progress-bar" } },
         { 10, new Window{ 
             Direction::Horizontal, "button-window",
             { 
@@ -126,8 +126,11 @@ int main( int __attribute__((unused))argc, char* __attribute__((unused))argv[] )
 
     cursed::ColorPair indicatorNormal{ red, yellow };
     cursed::ColorPair indicatorPressed{ blue, mutedGreen };
+    progressBar->setColors( indicatorNormal, indicatorPressed );
     hscroller->setIndicatorColors( indicatorNormal, indicatorPressed );
+    hscroller->setValue( 5 );
     vscroller->setIndicatorColors( indicatorNormal, indicatorPressed );
+    vscroller->setValue( 25 );
 
     cursed::ColorPair b1Normal{ nearblack, bluewhite };
     cursed::ColorPair b1Pressed{ bluewhite, nearblack };

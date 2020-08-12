@@ -24,6 +24,7 @@
 //  along with Cursed.  If not, see <https://www.gnu.org/licenses/>.
 #include "ScrollBar.hpp"
 #include "Button.hpp"
+#include "ProgressBar.hpp"
 #include "UTF.hpp"
 #include "Log.hpp"
 #include "Forward.hpp"
@@ -48,9 +49,7 @@ namespace cursed{
     ScrollBar::ScrollBar( Direction layoutDirection , const std::string& name ) : 
         Window( layoutDirection, name, {
                 {1, _decreaseButton    = new Button( decreasingArrow(layoutDirection) ) },
-                {1, _aboveValueButton  = new Button("")},
-                {1, _valueIndicator    = new Button("o", layoutDirection, "value-indicator:" + name)},
-                {1, _belowValueButton  = new Button("")},
+                {20, _valueIndicator    = new ProgressBar(layoutDirection, {}, "value-indicator:" + name)},
                 {1, _increaseButton    = new Button( increasingArrow(layoutDirection) ) }
         } ),
         _layoutDirection( layoutDirection )
@@ -90,71 +89,38 @@ namespace cursed{
         _increaseButton->signals.tripleClicked.connect( [&]( MouseButton, Point ){ incrementValue(3); }, leftButtonFilter );
         _increaseButton->signals.released.connect( increaseValue, leftButtonFilter );
 
-        _aboveValueButton->signals.clicked.connect(largeDecrease, leftButtonFilter );
-        _aboveValueButton->signals.doubleClicked.connect(doubleLargeDecrease, leftButtonFilter );
-        _aboveValueButton->signals.tripleClicked.connect(tripleLargeDecrease, leftButtonFilter );
-        _aboveValueButton->signals.released.connect(largeDecrease, leftButtonFilter );
+        _valueIndicator->progressBarSignals.clicked.connect( [&]( ProgressBar::Area area, MouseButton ){
+            incrementValue(-1);
+        }, { ProgressBar::Area::Value, MouseButton::Left } );
 
-        _belowValueButton->signals.clicked.connect(largeIncrease, leftButtonFilter );
-        _belowValueButton->signals.doubleClicked.connect(doubleLargeIncrease, leftButtonFilter );
-        _belowValueButton->signals.tripleClicked.connect(tripleLargeIncrease, leftButtonFilter );
-        _belowValueButton->signals.released.connect(largeIncrease, leftButtonFilter );
+        _valueIndicator->progressBarSignals.clicked.connect( [&]( ProgressBar::Area area, MouseButton ){
+            incrementValue(1);
+        }, ProgressBar::Clicked::optional_filter_tuple{ ProgressBar::Area::Remaining, MouseButton::Left } );
 
-        _valueIndicator->signals.mouseDrag.connect( [&]( MouseButton button, Point start, Point current ){
-            int stVal = start.getPosition( layoutDirection );
-            int curVal = current.getPosition( layoutDirection );
-
-            int diff = curVal - stVal;
-            int size = _valueIndicator->dimensions().size.getDimension( layoutDirection )
-                 + _aboveValueButton->dimensions().size.getDimension( layoutDirection )
-                 + _belowValueButton->dimensions().size.getDimension( layoutDirection );
-            int64_t perCell = _maxValue / size;
-
-            this->incrementValue( diff * perCell );
-        }, { MouseButton::Left, {}, {} } );
-        {
-            SizeLimits limits = _valueIndicator->sizeLimits();
-            limits.minimum.width = 1;
-            limits.minimum.height = 1;
-            limits.maximum.getDimension( layoutDirection ) = 1000;
-            _valueIndicator->setSizeLimits( limits );
-        }
         {
             SizeLimits limits = _decreaseButton->sizeLimits();
-            limits.minimum.width = 3;
+            limits.minimum.width = 3; // arrows are wide
             limits.minimum.height = 1;
-            limits.maximum.getDimension( layoutDirection ) = 1;
+            limits.maximum.getDimension( layoutDirection ) = 3;
             _decreaseButton->setSizeLimits( limits );
         }
         {
             SizeLimits limits = _increaseButton->sizeLimits();
-            limits.minimum.width = 3;
+            limits.minimum.width = 3; // arrows are wide
             limits.minimum.height = 1;
-            limits.maximum.getDimension( layoutDirection ) = 1;
+            limits.maximum.getDimension( layoutDirection ) = 3;
             _increaseButton->setSizeLimits( limits );
         }
         update();
     }
 
     void ScrollBar::update( bool force ){
-        if( _value != _aboveValueButton->layoutRatio() || _belowValueButton->layoutRatio() != (_maxValue - _value) || force ){
-            int64_t size = dimensions().size.getDimension( _layoutDirection ) - _increaseButton->dimensions().size.getDimension( _layoutDirection ) * 2;
-            int64_t perCell = size > 0 ? _maxValue / size : 1L;
-
-            _aboveValueButton->setLayoutRatio( std::max( _value - perCell / 2, 0L ) );
-            _belowValueButton->setLayoutRatio( std::max( _maxValue - _value - perCell / 2, 0L ) );
-
-            _valueIndicator->setLayoutRatio( std::max( perCell, 2L ) );
-
+        if( force ){
             layout().onAllocationChanged( this->dimensions() );
         }
     }
 
     void ScrollBar::refreshDimensions() {
-        int space = (dimensions().size.getDimension(_layoutDirection) - 2);
-        _valueIndicator->sizeLimits().minimum.getDimension( _layoutDirection) = 
-            std::max( space/_maxValue, 1L );
-
         Window::refreshDimensions();
     }
 
@@ -165,6 +131,10 @@ namespace cursed{
     int64_t ScrollBar::setValue( int64_t newValue ){ 
         int64_t oldValue = _value;
         _value = std::max(0L, std::min(newValue, _maxValue)); 
+        {
+            auto signalBlock = _valueIndicator->progressBarSignals.clicked.block();
+            _valueIndicator->setValue( newValue );
+        }
 
         if( _value != oldValue ){ 
             signals.valueChanged.emit( _value, oldValue );
@@ -177,15 +147,14 @@ namespace cursed{
     void ScrollBar::setMaxValue( int64_t newMax ) { 
         int oldValue = _maxValue;
         _maxValue = std::max(0L, newMax ); 
+        _valueIndicator->setValueRange({0, newMax});
         if( _maxValue != oldValue ){
             update( true );
         }
     }
 
-    void ScrollBar::setIndicatorColors( unsigned long normal, unsigned long pressed ){
-        _valueIndicator->setColors( normal, pressed );
-        _aboveValueButton->setColors( pressed, normal );
-        _belowValueButton->setColors( pressed, normal );
+    void ScrollBar::setIndicatorColors( unsigned long value, unsigned long remaining ){
+        _valueIndicator->setColors( value, remaining);
     }
 
     void ScrollBar::setButtonColors( unsigned long normal, unsigned long pressed ){

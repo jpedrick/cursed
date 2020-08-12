@@ -26,6 +26,7 @@
 #include <functional>
 #include <unordered_map>
 #include <memory>
+#include <atomic>
 #include <optional>
 #include <type_traits>
 
@@ -34,6 +35,29 @@ namespace cursed{
 #define signal_field( XXX )
 
     struct IConnectionToken;
+
+    template<typename PARENT_CLASS>
+    struct ScopedBlockGuard{
+        using ParentClass = PARENT_CLASS;
+
+        ScopedBlockGuard( ParentClass* signal ) : _parent( signal->atomicBlock() ? signal : nullptr ) { }
+        ScopedBlockGuard( ScopedBlockGuard&& moving ) : _parent( moving._parent ){
+            moving._parent = nullptr;
+        }
+
+        ~ScopedBlockGuard(){
+            if( _parent ){
+                _parent->unblock();
+            }
+        }
+
+        operator bool(){
+            return _parent;
+        }
+
+    private:
+        ParentClass* _parent;
+    };
 
     struct IConnectionToken{
         using pointer = std::shared_ptr<IConnectionToken>;
@@ -53,6 +77,8 @@ namespace cursed{
         virtual IConnectionToken::pointer reconnect() = 0;
         virtual bool isConnected() const = 0;
 
+        virtual bool atomicBlock() = 0;
+        virtual void unblock() = 0;
         virtual void clearSignal( ) = 0;
 
     protected:
@@ -83,8 +109,9 @@ namespace cursed{
 
         struct ConnectionToken : public IConnectionToken {
             friend struct Signal;
+            using concrete_pointer = std::shared_ptr<ConnectionToken>;
 
-            ConnectionToken( slot_function f, Signal* signal, uint64_t key ) : IConnectionToken(key), function(f), signal(signal) { }
+            ConnectionToken( slot_function f, Signal* signal, uint64_t key ) : IConnectionToken(key), _function(f), _signal(signal) { }
 
             ConnectionToken() = delete;
             ConnectionToken( ConnectionToken&& token ) = delete;
@@ -95,32 +122,46 @@ namespace cursed{
             }
 
             void disconnect() override { 
-                if( signal ){ // destructing(): avoid double free
-                    signal->disconnect( *this ); 
+                if( _signal ){ // destructing(): avoid double free
+                    _signal->disconnect( *this ); 
                 }
             }
 
             bool isConnected() const override{ 
-                if( signal ){ 
-                    return signal->isConnected( *this );
+                if( _signal ){ 
+                    return _signal->isConnected( *this );
                 }
 
                 return false;
             }
-            IConnectionToken::pointer reconnect() override{ return signal->reconnect( *this ); }
+            IConnectionToken::pointer reconnect() override{ return _signal->reconnect( *this ); }
 
             void clearSignal( ) override{
-                signal = nullptr;
+                _signal = nullptr;
+            }
+
+            template< typename... CALLARGS >
+            inline void call( CALLARGS&&... args ){
+                _function( std::forward<CALLARGS>(args)... );
+            }
+
+            bool atomicBlock() { return !_blocked.exchange(true); }
+            void unblock() { _blocked = false; }
+
+            ScopedBlockGuard<ConnectionToken> block(){
+                return ScopedBlockGuard<ConnectionToken>{this};
             }
 
         private:
-            const slot_function function;
-            Signal* signal;
+            const slot_function _function;
+            Signal* _signal;
+            std::atomic<bool> _blocked = false;
         };
 
         friend struct ConnectionToken;
 
         Signal( ) { }
+
         ~Signal( ) { 
             _destructing = true;
             for( auto& tok : _tokens ){
@@ -130,7 +171,6 @@ namespace cursed{
 
         std::shared_ptr<IConnectionToken> connect( const slot_function& f ){ 
             auto token = std::make_shared<ConnectionToken>( f, this, ++_connectionCounter );
-            _slots.emplace( token->key(), f );
 
             add(token);
 
@@ -147,13 +187,21 @@ namespace cursed{
             return connect( filteredFunction );
         }
 
+        ScopedBlockGuard<Signal> block(){
+            return ScopedBlockGuard<Signal>{ this };
+        }
 
-        void block( bool v ){ _blocked = v; }
+        // returns true if aquired
+        bool atomicBlock( ){ return !_blocked.exchange( true ); } 
+
+        bool unblock( ){ return _blocked = false; }
 
         template< typename... CALLARGS >
         void emit( CALLARGS&&... args ){
             if( !_blocked ){
-                for( auto& slot : _slots ) slot.second( std::forward<CALLARGS>(args)... );
+                for( auto& token : _tokens ) {
+                    token.second->call( std::forward<CALLARGS>(args)... );
+                }
             }
         }
 
@@ -171,7 +219,7 @@ namespace cursed{
 
     protected:
 
-        void add( const IConnectionToken::pointer& token ) { 
+        void add( const std::shared_ptr<ConnectionToken>& token ) { 
             if( token ){
                 _tokens.emplace( token->key(), token );
             }
@@ -179,19 +227,18 @@ namespace cursed{
 
         IConnectionToken::pointer reconnect( const ConnectionToken& token ){ 
             if( !isConnected( token ) ){
-                return connect( token.function );
+                return connect( token._function );
             }
 
             return {};
         }
 
         bool isConnected( const ConnectionToken& token ) const {
-            return _slots.count( token.key() ) > 0;
+            return _tokens.count( token.key() ) > 0;
         }
 
         void disconnect( const ConnectionToken& token ){ 
             if ( isConnected( token ) ){
-                _slots.erase( token.key() ); 
                 _tokens.erase( token.key() );
             }
         }
@@ -207,12 +254,11 @@ namespace cursed{
             emit( std::forward<CALLARGS>(args)... );
         }
 
-        std::unordered_map<uint64_t, slot_function> _slots;
-        bool _blocked = false;
+        std::atomic<bool> _blocked = false;
         bool _destructing = false;
         uint64_t _connectionCounter = 0;
 
-        std::unordered_map<uint64_t, IConnectionToken::pointer> _tokens;
+        std::unordered_map<uint64_t, std::shared_ptr<ConnectionToken> > _tokens;
     };
 }
 

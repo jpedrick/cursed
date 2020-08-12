@@ -32,16 +32,6 @@
 
 namespace cursed{
 
-
-struct ProgressBarColors{
-    Color progressNormal = Color{ 0, 0, 1000 };
-    Color progressPressed = Color{ 0, 0, 500 };
-    Color remainingNormal = Color{ 0, 500, 1000 };
-    Color remainingPressed = Color{ 0, 500, 500 };
-    Color handleForeground = Color{ 1000, 1000, 1000 };
-    Color handleBackground = Color{ 500, 500, 500 };
-};
-
 struct Int64ValueRange{ 
     int64_t min = 0; 
     int64_t max = 100; 
@@ -53,10 +43,10 @@ struct Int64ValueRange{
         return std::min( max, std::max( min, v ) );
     }
 };
+
 struct ProgressBarConstructorArgs{
     int64_t value = 0;
     Int64ValueRange range = {0,100};
-    ProgressBarColors colors = {};
 };
 
 class ProgressBar : public MouseEventWindow{
@@ -67,6 +57,10 @@ public:
     ProgressBar( Direction layout, 
                  const ProgressBarConstructorArgs& builderArgs = {},
                  const std::string& name = "" );
+
+    struct visualProperties{
+
+    };
 
     typedef int64_t NewValue;
     typedef int64_t OldValue;
@@ -94,16 +88,24 @@ public:
 
     void update( bool force = true );
 
-    void setIndicatorColors( const ProgressBarColors& = ProgressBarColors{} );
-
     void draw( bool fullRefresh ) override;
 
+    void setColors( unsigned long valueColor, unsigned long remainingColor ){
+        _visualProperties.valueColor = valueColor;
+        _visualProperties.remainingColor = remainingColor;
+    }
+
 private:
+    struct VisualProperties{
+        unsigned long valueColor = 0;
+        unsigned long remainingColor = 0;
+        unsigned long attributes = 0;
+    } _visualProperties;
+
     int64_t _value;
     Int64ValueRange _valueRange;
     Direction _layoutDirection;
     bool _show = true;
-    ProgressBarColors _colors;
     Rectangle _filledArea;
     Rectangle _unfilledArea;
 };

@@ -1,3 +1,4 @@
+#pragma once
 //  Copyright notice:
 //  This file is part of Cursed.
 //  Cursed is free software: you can redistribute it and/or modify
@@ -22,13 +23,16 @@
 //
 //  You should also have received a copy of the GNU Affero General Public License
 //  along with Cursed.  If not, see <https://www.gnu.org/licenses/>.
-#pragma once
-#include "MouseEventWindow.hpp"
+
+#include "Window.hpp"
 #include "Signal.hpp"
+#include "Color.hpp"
+
 #include <functional>
 
 namespace cursed{
 class Button;
+class ProgressBar;
 
 class ScrollBar : public Window{
 public:
@@ -53,7 +57,7 @@ public:
     void update( bool force = true );
     void setButtonIncrement( int v ) { _buttonIncrement = v; }
     void setButtonColors( unsigned long normal, unsigned long pressed );
-    void setIndicatorColors( unsigned long normal, unsigned long pressed );
+    void setIndicatorColors( unsigned long value, unsigned long remaining );
 
     void refreshDimensions() override;
 
@@ -62,9 +66,7 @@ public:
 
 private:
     Button* _decreaseButton;
-    Button* _aboveValueButton;
-    Button* _valueIndicator;
-    Button* _belowValueButton;
+    ProgressBar* _valueIndicator;
     Button* _increaseButton;
 
     int64_t _value;

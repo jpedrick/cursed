@@ -192,13 +192,6 @@ void Draw::box( IWindow* win, Rectangle dim, BoxStyle boxStyle ){
     }
 }
 
-void Draw::filledBlock( IWindow* win, const Rectangle& dimensions, wchar_t c ){
-    Point start = win->absolute( dimensions.topLeft );
-    for( int i = 0; i < dimensions.size.height; ++i ){
-        line( win, Direction::Horizontal, start, dimensions.size.width, c );
-    }
-}
-
 void Draw::line( IWindow* win, Direction d, int pos, wchar_t c ){
     switch(d){
         case Direction::Horizontal:{
@@ -237,6 +230,17 @@ void Draw::line( IWindow* win, Direction d, Point start, int len, wchar_t c ){
             }
         }break;
         default: break;
+    }
+}
+
+void Draw::filledBlock( IWindow* win, const Rectangle& dimensions, wchar_t c ){
+    Point lineStart = dimensions.topLeft;
+    Direction dir = dimensions.size.height > dimensions.size.width ? Direction::Vertical : Direction::Horizontal;
+
+    int lineLength = dimensions.size.getDimension( dir );
+    for( int i = 0; i < dimensions.size.getDimension( other(dir) ); ++i ){
+        line( win, dir, lineStart, lineLength, c );
+        lineStart.getPosition( other(dir) ) += 1;
     }
 }
 

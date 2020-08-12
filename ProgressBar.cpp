@@ -8,7 +8,7 @@ ProgressBar::ProgressBar( Direction layout,
              const ProgressBarConstructorArgs& builderArgs,
              const std::string& name ) : MouseEventWindow{ layout, name }
     , _valueRange( builderArgs.range )
-    , _colors( builderArgs.colors )
+    , _layoutDirection( layout )
     , _value( builderArgs.value )
 {
     signals.clicked.connect( [&]( MouseButton button, Point relativePos ){
@@ -63,11 +63,12 @@ void ProgressBar::draw( bool fullRefresh ){
         
         //unsigned long color = _pressed ? visualProperties.pressedColor : visualProperties.normalColor;
         { // Filled portion(part that repesents "progress")
+            Draw::AttributeGuard ag{ this, _visualProperties.valueColor | _visualProperties.attributes };
             _filledArea = dim;
             _filledArea.size.getDimension(_layoutDirection) = filledSize;
             _filledArea.topLeft = Point{ 0, 0, dim.topLeft.z };
-            //Draw::AttributeGuard ag{ this, ColorPair{ _colors.progressNormal, _colors.progressPressed } };
-            //Draw::filledBlock( this, _filledArea );
+
+            Draw::filledBlock( this, _filledArea, ' ' );
 
             // clear button
             for( int i = 0; i < _filledArea.size.getDimension( _layoutDirection ); ++i ){
@@ -76,20 +77,24 @@ void ProgressBar::draw( bool fullRefresh ){
         }
 
         { // Filled portion(part that repesents "remaining")
+            Draw::AttributeGuard ag{ this, _visualProperties.remainingColor | _visualProperties.attributes };
             _unfilledArea = dim;
             _unfilledArea.size.getDimension(_layoutDirection) = unfilledSize;
             _unfilledArea.topLeft = _filledArea.topLeft;
             _unfilledArea.topLeft.getPosition(_layoutDirection) += filledSize;
-            //Draw::AttributeGuard ag{ this, ColorPair{ _colors.remainingNormal, _colors.remainingPressed } };
-            //Draw::filledBlock( this, _unfilledArea );
+
+            Draw::filledBlock( this, _unfilledArea, ' ' );
 
             // clear button
             for( int i = 0; i < _unfilledArea.size.getDimension( _layoutDirection ); ++i ){
-                Draw::line( this, other( _layoutDirection ), i + filledSize, ' ');
+                Draw::line( this, other( _layoutDirection ), i + filledSize, ' ' );
             }
         }
         
-        Draw::line( this, other(_layoutDirection ), filledSize, _layoutDirection == Direction::Vertical ? '-' : '|' );
+        {
+            Draw::AttributeGuard ag{ this, _visualProperties.valueColor | _visualProperties.attributes };
+            Draw::line( this, other(_layoutDirection ), filledSize, _layoutDirection == Direction::Vertical ? '-' : '|' );
+        }
         ::refresh();
     }
 }
