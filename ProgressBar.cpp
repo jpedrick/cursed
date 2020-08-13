@@ -11,14 +11,18 @@ ProgressBar::ProgressBar( Direction layout,
     , _layoutDirection( layout )
     , _value( builderArgs.value )
 {
-    signals.clicked.connect( [&]( MouseButton button, Point relativePos ){
+    auto onMouseButtonEvent = [&]( MouseButton button, Point relativePos ){
         if( _filledArea.contains( relativePos ) ){
             progressBarSignals.clicked.emit( Area::Value, button );
         }
         else if( _unfilledArea.contains( relativePos ) ){
             progressBarSignals.clicked.emit( Area::Remaining, button );
         }
-    }, { MouseButton::Left, {} } );
+    };
+
+    signals.clicked.connect( onMouseButtonEvent, { MouseButton::Left, {} } );
+
+    signals.released.connect( onMouseButtonEvent, { MouseButton::Left, {} } );
 }
 
 double Int64ValueRange::getPercent( int64_t value, const Int64ValueRange& valueRange ){
