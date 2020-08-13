@@ -84,8 +84,8 @@ namespace cursed{
         globalApplication->onRootResized();
     }
 
-    Application::Application( Direction dir, std::initializer_list<LayoutObject> children ) : 
-        Window( dir, "application", children ),
+    Application::Application( const std::string& name, Direction dir, std::initializer_list<LayoutObject> children ) : 
+        Window( dir, name, children ),
         _window( initScreen() )
     {
         globalApplication = this;
@@ -116,28 +116,32 @@ namespace cursed{
     void Application::onKeyboardInput( int c ){
         if( c == 3 ){ 
             _exit = true; 
-        }
-        if( c == KEY_MOUSE ) {
+        } else if( c == KEY_MOUSE ) {
             MouseButtonEvent mouseEvent{c};
-            onMouseInput( mouseEvent );
+            onMouseInput( mouseEvent.position(), mouseEvent );
             return;
-        }
-        if( focus() ){
+        } else if( focus() ){
             focus()->onKeyboardInput( c );
         }
     }
 
-    void Application::onMouseInput( MouseButtonEvent& event ){
-        Window::onMouseInput( event.position() - Point{0,0}, event );
-        if( event.mouseKeyEvent( 1, MouseButtonEventType::Pressed ) || event.mouseKeyEvent( 1, MouseButtonEventType::Clicked )){
+    void Application::onMouseInput( const Point& relPos, MouseButtonEvent& event ){
+        Window::onMouseInput( relPos, event );
+
+        // TODO: consider making elements aquire focus themselves instead of handling at application level
+        if( event.mouseKeyEvent( 1, MouseButtonEventType::Released ) || event.mouseKeyEvent( 1, MouseButtonEventType::Clicked )){
             IWindow* clickedWindow = this->childAt( event.position() );
-            if( clickedWindow && clickedWindow->canAquireFocus() ){
-                setFocus( clickedWindow );
+            while( clickedWindow ){
+                if( clickedWindow && clickedWindow->canAquireFocus() ){
+                    return setFocus( clickedWindow );
+                }
+
+                clickedWindow = clickedWindow->childAt( event.position() - clickedWindow->dimensions().topLeft );
             }
         }
     }
 
-    void Application::refresh(){
+    void Application::refresh( bool /*force*/ ){
         wrefresh( window() );
     }
 

@@ -23,50 +23,34 @@
 //  You should also have received a copy of the GNU Affero General Public License
 //  along with Cursed.  If not, see <https://www.gnu.org/licenses/>.
 #pragma once
-#include "Window.hpp"
+#include "MouseEventWindow.hpp"
 #include "Signal.hpp"
 #include <functional>
 
 namespace cursed{
 
-class LineEdit: public Window{
+class LineEdit: public MouseEventWindow{
 public:
     struct{
         Signal< std::string > textChanged;
         Signal< >             returnPressed;
         Signal< >             editingFinished; // Lost focus while editing
-    } signals;
+    } lineEditSignals;
 
-    template< typename... Args > inline LineEdit( Args&&... args ) : Window( std::forward<Args>(args)... ) { 
-        static_cast<Window*>(this)->signals.acquiredFocus.connect([&]{ 
-            if( !_hasFocus ){
-                _hasFocus = true; 
-                draw(true); ::refresh();
-            }
-        });
-        static_cast<Window*>(this)->signals.lostFocus.connect([&]{ 
-            if( _hasFocus ){
-                _hasFocus = false; 
-                draw(true); ::refresh();
-            }
-        });
-        {
-            SizeLimits szLim = sizeLimits();
-            szLim.minimum.height = 1;
-            szLim.maximum.height = 1;
-            setSizeLimits( szLim );
-        }
+    template< typename... Args > inline LineEdit( Args&&... args ) : MouseEventWindow( std::forward<Args>(args)... ) { 
+        setup();
     }
 
     void draw( bool fullRefresh ) override;
     void setText( const std::string& newText );
     const std::string text() const{ return _text; }
     void setCanAquireFocus( bool can ) { _canAcquireFocus = can; }
-    bool canAquireFocus() const override { return _canAcquireFocus; }
+    bool canAquireFocus() const override { return true; }
     bool hasFocus() const { return _hasFocus; }
     void onKeyboardInput( int c ) override;
 
 private:
+    void setup();
     void deleteLeft();
     void deleteRight();
     void moveCursor( int increment );

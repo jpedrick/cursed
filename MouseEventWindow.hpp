@@ -40,7 +40,7 @@ enum class MouseButton : int {
 
 class MouseEventWindow : public Window{
 public:
-    MouseEventWindow( Direction layout = Direction::Vertical, const std::string& n = "", std::initializer_list<LayoutObject> children = {} );
+    MouseEventWindow( Direction layout = Direction::Vertical, const std::string& name = "", std::initializer_list<LayoutObject> children = {} );
 
     MouseEventWindow( const MouseEventWindow& ) = delete;
 

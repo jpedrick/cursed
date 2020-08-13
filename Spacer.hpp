@@ -35,7 +35,7 @@ public:
         Window( std::forward<Args>(args)... )
     { }
 
-    void draw( bool __attribute__((unused))fullRefresh ) override{} //Just take up space in the layout, noop drawing.
+    void draw( bool unused(fullRefresh) ) override{} //Just take up space in the layout, noop drawing.
 };
 
 }

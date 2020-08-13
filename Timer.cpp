@@ -51,7 +51,7 @@ namespace cursed{
 
     void Timer::onEvent( int ) {
         struct itimerspec t;
-        ssize_t __attribute__((unused))bytesRead = ::read( _fd, &t, sizeof(t) );
+        ssize_t unused(bytesRead) = ::read( _fd, &t, sizeof(t) );
 
         signals.timeout.emit();
     }

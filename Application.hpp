@@ -42,14 +42,16 @@ namespace cursed{
 
 class Application : public Window {
 public:
-    Application( Direction dir = Direction::Horizontal, std::initializer_list<LayoutObject> children = {} );
+    Application( const std::string& name = "application", 
+                 Direction dir = Direction::Horizontal, 
+                 std::initializer_list<LayoutObject> children = {} );
 
     ~Application();
 
     void start();
 
     void onKeyboardInput( int c ) override;
-    void onMouseInput( MouseButtonEvent& );
+    void onMouseInput( const Point& relative, MouseButtonEvent& e ) override;
     bool exit() const{ return _exit; }
 
     void onRootResized();
@@ -58,7 +60,7 @@ public:
     Reactor& reactor(){ return _reactor; }
     static Application& instance();
 
-    void refresh();
+    void refresh( bool force = true ) override;
 
     IWindow* focus() const{ return _focus; }
     void setFocus( IWindow* newFocus ) { 
@@ -68,6 +70,8 @@ public:
         }
         _focus = newFocus;
     }
+
+    Application* application() override{ return this; }
 
     void addDelayedAction( std::chrono::milliseconds delay, std::function<void()> action ) override;
 private:

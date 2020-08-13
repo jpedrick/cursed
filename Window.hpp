@@ -49,6 +49,8 @@ public:
     IWindow* parent() final{ return _parent; }
     const IWindow* parent() const final{ return _parent; }
 
+    Application* application() override;
+
     int id() const final{ return _id; }
 
     void refresh( bool fullRefresh ) override;
@@ -56,10 +58,9 @@ public:
     WINDOW* window() override;
 
     void onKeyboardInput( int unused(c) ) override{ }
-    void onMouseInput( const Point& relative, MouseButtonEvent& e ) override;
 
-    virtual void setBorderStyle( BoxStyle );
-    virtual BoxStyle borderStyle( );
+    void setBorderStyle( BoxStyle ) override;
+    BoxStyle borderStyle( ) override;
 
     virtual void setSizeLimits( const SizeLimits& limits ) override{ _sizeLimits = limits; }
     virtual const SizeLimits& sizeLimits() const override { return _sizeLimits; }
@@ -83,6 +84,7 @@ public:
 
     void setShow( bool val ) override{ _show = val; }
     bool show() const override{ return _show; }
+    void onMouseInput( const Point& relative, MouseButtonEvent& e ) override;
 
 protected: 
     void setDrawWindowDelegate( IDrawWindowDelegate* delegate ) override { _drawingDelegate = delegate; }
@@ -106,6 +108,7 @@ private:
     bool _debug = false;
     bool _show = true;
     BoxStyle _borderStyle = BoxStyle::None;
+    Application* _application = nullptr;
 };
 
 }

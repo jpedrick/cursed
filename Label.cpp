@@ -28,6 +28,10 @@
 
 namespace cursed{
 
+void Label::setup(){
+    this->sizeLimits().minimum.width = _text.size();
+}
+
 void Label::draw( bool fullRefresh ){
     if( fullRefresh ){
         int startx = 0;
@@ -63,6 +67,12 @@ void Label::draw( bool fullRefresh ){
 void Label::setText( const std::string txt ){
     auto previousValue = _text;
     _text = txt;
+    setup();
+
+    if( previousValue.size() != _text.size() ){
+        layout().onAllocationChanged( this->dimensions() );
+    }
+
     draw(true);
     signals.valueChanged.emit( _text, previousValue );
 }

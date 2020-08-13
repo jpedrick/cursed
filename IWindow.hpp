@@ -39,9 +39,8 @@ extern "C"{
 
 namespace cursed{
 
-class IConnectionToken;
-
 class IDrawWindowDelegate;
+class Application;
 
 class IWindow{
 public:
@@ -57,9 +56,11 @@ public:
     virtual Point absolute( const Point& p ) const = 0;
     virtual IWindow* childAt( const Point& p ) const = 0;
 
+    virtual Application* application() = 0;
+
     virtual void setParent( IWindow*, int& i ) = 0;
     virtual void refresh( bool fullRefresh ) = 0;
-    virtual void draw( bool __attribute__((unused)) fullRefresh ){}
+    virtual void draw( bool unused(fullRefresh) ){}
 
     virtual void setDimensions( Rectangle rect ) = 0;
     virtual const Rectangle& dimensions() const = 0;
@@ -78,7 +79,7 @@ public:
     virtual WINDOW* window() = 0;
 
     virtual void onKeyboardInput( int c ) = 0;
-    virtual void onMouseInput( const Point& relative, MouseButtonEvent& event ) = 0;
+    virtual void onMouseInput( const Point&, MouseButtonEvent& ){}
 
     virtual void setName( const std::string& ) {}
     virtual std::string name( ) const { return ""; }

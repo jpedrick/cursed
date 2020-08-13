@@ -24,8 +24,31 @@
 //  along with Cursed.  If not, see <https://www.gnu.org/licenses/>.
 #include "LineEdit.hpp"
 #include "Draw.hpp"
+#include "Application.hpp"
 
 namespace cursed{
+    void LineEdit::setup(){
+        static_cast<Window*>(this)->signals.acquiredFocus.connect([&]{ 
+            if( !_hasFocus ){
+                _hasFocus = true; 
+                draw(true); ::refresh();
+            }
+        });
+
+        static_cast<Window*>(this)->signals.lostFocus.connect([&]{ 
+            if( _hasFocus ){
+                _hasFocus = false; 
+                draw(true); ::refresh();
+            }
+        });
+        
+        {
+            SizeLimits szLim = sizeLimits();
+            szLim.minimum.height = 1;
+            szLim.maximum.height = 1;
+            setSizeLimits( szLim );
+        }
+    }
 
     void LineEdit::draw( bool fullRefresh ) {
         if( fullRefresh ){
@@ -75,7 +98,7 @@ namespace cursed{
     void LineEdit::setText( const std::string& newText ){ 
         _text = newText; 
         _cursorPosition = _text.size();
-        signals.textChanged.emit( _text );
+        lineEditSignals.textChanged.emit( _text );
         draw( true );
         ::refresh();
     }
@@ -133,7 +156,7 @@ namespace cursed{
                 return;
             }
             case 13: {
-                signals.returnPressed.emit();
+                lineEditSignals.returnPressed.emit();
                 return;
             }
         }

@@ -37,7 +37,7 @@ namespace cursed{
     }
 
 void Button::connectActions(){
-    signals.pressed.connect([&]( MouseButton mouseButton, Point relPos ){
+    signals.pressed.connect([&]( MouseButton mouseButton, Point ){
         if( mouseButton == MouseButton::Button1 ){
             _pressed = true; draw(true); ::refresh();
         }
@@ -50,7 +50,6 @@ void Button::connectActions(){
         button->_pressed = false; button->draw(true); ::refresh(); 
     };
 
-    constexpr int leftButton = 1;
     signals.clicked.connect([&]( MouseButton, Point ){ 
         setPressedAndRedraw( this );
         this->addDelayedAction( std::chrono::milliseconds(this->reactionDelay()),[&]{

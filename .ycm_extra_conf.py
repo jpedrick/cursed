@@ -64,11 +64,10 @@ flags = [
 '-x', 'c++',
 '-I', '.',
 '-iquote', rootDir,
-'-isystem', '/usr/include/ncursesw',
-'-isystem', './unit_tests/fakeit/include',
-'-isystem', '/usr/include',
+'-isystem', '/usr/include/c++/9',
 '-isystem', '/usr/local/include',
-'-isystem', '/usr/include/c++/v1',
+'-isystem', '/usr/include',
+'-isystem', '/usr/include/ncursesw',
 '-isystem', '/home/jpedrick/host/quickfix-test/include'
 ]
 

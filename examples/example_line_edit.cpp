@@ -33,6 +33,9 @@
 #include "IListModel.hpp"
 #include "ListModelIndex.hpp"
 
+#include <vector>
+#include <fstream>
+
 class ListModel : public cursed::IListModel{
 public:
     int64_t rowCount() const{
@@ -40,23 +43,23 @@ public:
     }
 
     std::vector<int> displayRoles() const{
-        return {1};
+        return std::vector<int>{ 0, 1 };
     }
 
     const std::string& roleName( int role ) const {
         return _roleNames[ role ];
     }
 
-    const std::string& text( const cursed::ListModelIndex& ix, int unused(displayRole) ) const{
-        return _rows[ix.rowIndex()].data;
+    const std::string& text( const cursed::ListModelIndex& ix, int displayRole ) const{
+        return _rows[ix.rowIndex()].data[ displayRole ];
     }
 
-    unsigned long attributes(  const cursed::ListModelIndex& unused(ix), int unused(displayRole) ) const{
+    unsigned long attributes(  const cursed::ListModelIndex& ix, int unused(displayRole) ) const{
         return _rows[ix.rowIndex()].attributes;
     }
 
     struct Item{
-        std::string data;
+        std::vector<std::string> data;
         unsigned long attributes;
     };
     void insertItem( int ix, const Item& item ){
@@ -65,25 +68,33 @@ public:
     }
 private:
     std::vector<Item> _rows;
-    std::vector<std::string> _roleNames = { "data" };
+    std::vector<std::string> _roleNames = { "field 1|", "field 2|" };
 };
 
-int main( int __attribute__((unused))argc, char* __attribute__((unused))argv[] ){
+int main( int unused(argc), char* unused(argv)[] ){
     using namespace cursed;
+    cursed::Log::setOutputStream( new std::ofstream("test_example_line_edit_log.txt") );
+    cursed_out( "running application: " << cprint(argv[0]) );
 
     ListModel model;
     Label* label = nullptr;
-    LineEdit* lineEdit = nullptr;
+    LineEdit* lineEdit1 = nullptr;
     LineEdit* lineEdit2 = nullptr;
     ScrolledListView* listView = nullptr;
-    Application app{ Direction::Vertical, {
-        { 0, label = new Label{ "some text for a label" } }, 
-        { 0, lineEdit = new LineEdit{ Direction::Horizontal } },
-        { 0, lineEdit2 = new LineEdit{ Direction::Horizontal } },
-        { 1, listView = new ScrolledListView{ &model } }
-    }};
+    Application app{ argv[0], 
+        Direction::Vertical, {
+            { 0, label = new Label{ "Enter some text: " } }, 
+                cursed::LayoutObject{ 1, new Window{ Direction::Horizontal, "line-edits", {
+                    { 1, new Label{ "field 1| " } },
+                    { 10, lineEdit1 = new LineEdit{ Direction::Horizontal, "lineEdit1" } },
+                    { 1, new Label{ "field 2| " } },
+                    { 10, lineEdit2 = new LineEdit{ Direction::Horizontal, "lineEdit2" } },
+                } } },
+            { 10, listView = new ScrolledListView{ &model } }
+        }
+    };
 
-    app.setFocus( lineEdit );
+    app.setFocus( lineEdit2 );
 
     {
         SizeLimits limits = label->sizeLimits();
@@ -105,12 +116,11 @@ int main( int __attribute__((unused))argc, char* __attribute__((unused))argv[] )
     cursed::ColorPair labelColor{ bluegrey, darkblue };
     label->setColor( labelColor );
 
-    lineEdit->signals.returnPressed.connect([&]{
-        label->setText( "lineEdit return pressed: " + lineEdit->text() );
-        model.insertItem(0, ListModel::Item{ lineEdit->text(), l1ItemColor } );
+    lineEdit1->lineEditSignals.returnPressed.connect([&]{
+        model.insertItem(0, ListModel::Item{ { lineEdit1->text(), lineEdit2->text() }, l1ItemColor } );
     });
-    lineEdit2->signals.returnPressed.connect([&]{
-        label->setText( "lineEdit2 return pressed: " + lineEdit2->text() );
+    lineEdit2->lineEditSignals.returnPressed.connect([&]{
+        model.insertItem(0, ListModel::Item{ { lineEdit1->text(), lineEdit2->text() }, l1ItemColor } );
     });
 
     app.refresh();

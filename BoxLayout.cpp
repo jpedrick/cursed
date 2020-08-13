@@ -71,7 +71,12 @@ void BoxLayout::clear(){
     _ratioSum = 0;
 }
 
+void BoxLayout::updateLayout( ){
+    onAllocationChanged( _allocation );
+}
+
 void BoxLayout::onAllocationChanged( Rectangle allocation ) {
+    _allocation = allocation;
     int layoutDimension = allocation.size.getDimension( _dir );
     int currentPosition = 0;
     int remainingSpace = layoutDimension;
@@ -104,7 +109,9 @@ void BoxLayout::onAllocationChanged( Rectangle allocation ) {
 
     // Loop until all remaining space is used
     while( remainingSpace > 0 ){
-        if( ++iterCount > maxIters ) break;
+        if( ++iterCount > maxIters ){
+            break;
+        }
 
         std::vector<size_t> adjustableObjs;
         for( size_t i = 0; i < _objects.size(); ++i ){
@@ -150,6 +157,7 @@ void BoxLayout::onAllocationChanged( Rectangle allocation ) {
 
         if( currentPosition != layoutDimension && hasAdjustable ){
             std::stringstream ss;
+
             ss << "bad layout " << cprint(currentPosition) << cprint(layoutDimension) << cprint(_objects.size());
             throw std::runtime_error(ss.str());
         }

@@ -23,6 +23,8 @@
 //  You should also have received a copy of the GNU Affero General Public License
 //  along with Cursed.  If not, see <https://www.gnu.org/licenses/>.
 #pragma once
+#include "ILayout.hpp"
+
 #include "IWindow.hpp"
 
 #include "Point.hpp"
@@ -30,17 +32,10 @@
 #include "Direction.hpp"
 #include "LayoutObject.hpp"
 
+
 #include <vector>
 
 namespace cursed{
-
-    class ILayout{
-    public:
-        virtual ~ILayout(){}
-        virtual void onAllocationChanged( Rectangle allocation ) = 0;
-        virtual const std::vector<IWindow*>& objects() = 0;
-    };
-
     class BoxLayout : public ILayout{
     public:
         BoxLayout( Direction dir, std::initializer_list<LayoutObject> objects = {} );
@@ -51,6 +46,7 @@ namespace cursed{
         void clear();
 
         void onAllocationChanged( Rectangle allocation ) final;
+        void updateLayout( ) final;
 
         const std::vector<IWindow*>& objects(){ return _objects; }
         const std::vector<IWindow*>& objects() const{ return _objects; }
@@ -62,6 +58,9 @@ namespace cursed{
 
         std::vector<IWindow*> _objects;
         int _ratioSum = 0;
+
+        bool _debug = false;
+        Rectangle _allocation;
     };
 }
 

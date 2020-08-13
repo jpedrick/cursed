@@ -247,7 +247,8 @@ int main( int unused(argc), char* unused(argv[]) ){
                     cursed::LayoutObject{ 2, button2 = new Button{ "Deciduous Tree!", Direction::Horizontal, "button1" } },
                 } };
 
-    cursed::Application app{ Direction::Horizontal, 
+    cursed::Application app{ argv[0], 
+        Direction::Horizontal, 
         { 
             {1, leftPanel },
             {1, rightPanel } 

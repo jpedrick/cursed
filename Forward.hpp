@@ -39,14 +39,29 @@ class IFileEventHandler;
 }
 
 #define cprint( __expression__ ) " " << #__expression__ << ":" << __expression__
-#define cursed_out( __stream_expression__ ) ( ::cursed::Log::instance() << __stream_expression__ << "\t[" << __FILE__ << ":" << __LINE__ << "][" << __func__ << "]"  ).endl();
-#define cursed_echo( COMMAND, OUTPUT ) { ( ::cursed::Log::instance() << #COMMAND << "[" << OUTPUT << "]" << "[" << __FILE__ << ":" << __LINE__ << "][" << __func__ << "]"  ).endl();} COMMAND
-#define cursed_throw( DESCRIPTION ) { std::stringstream ss; ss << DESCRIPTION << "[" << __FILE__ << ":" << __LINE__ << "][" << __func__ << "]"; throw std::runtime_error( ss.str() ); }
-#define cursed_assert( TRUE_STATEMENT, DESCRIPTION ) if( !(TRUE_STATEMENT) ){ cursed_out(DESCRIPTION); cursed_throw(DESCRIPTION); }
+
+#define cursed_out( __stream_expression__ ) ( \
+    ::cursed::Log::instance() << __stream_expression__ << "\t[" << __FILE__ << ":" << __LINE__ << "][" << __func__ << "]" \
+).endl();
+
+#define cursed_echo( __command__, __stream_expr__ ) { \
+    ( ::cursed::Log::instance() << #__command__ << "[" << __stream_expr__ << "]" << \
+      "[" << __FILE__ << ":" << __LINE__ << \
+      "][" << __func__ << "]"  ).endl();} __command__
+
+#define cursed_throw( __stream_expr__ ) { \
+    std::stringstream ss; ss << __stream_expr__ << " [" << __FILE__ << ":" << __LINE__ << "][" << __func__ << "]"; throw std::runtime_error( ss.str() ); \
+}
+
+#define cursed_assert( __true_condition__, __stream_expr__ )    \
+if( !(__true_condition__) ){                                    \
+    cursed_out(__stream_expr__); cursed_throw(__stream_expr__); \
+}
+
 #define cursed_system_expect( __expression__ ){ \
     if( __expression__ ){ char errbuf[256]; \
         cursed_throw( cprint(#__expression__) << cprint(strerror_r(errno, errbuf, sizeof(errbuf))) ); \
     }\
 }
 
-#define unused(SYM) SYM __attribute__((unused))
+#define unused(SYM) SYM [[gnu::unused]]

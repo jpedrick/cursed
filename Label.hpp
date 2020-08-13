@@ -34,7 +34,9 @@ public:
     inline Label( std::string text,  Args&&... args ) : 
         Window( std::forward<Args>(args)... ),
         _text(text)
-    { }
+    { 
+        setup();
+    }
 
     typedef std::string NewValue;
     typedef std::string OldValue;
@@ -55,6 +57,7 @@ public:
     void draw( bool fullRefresh ) override;
 
 private:
+    void setup();
     std::string _text;
     struct{
         unsigned long color = 0;

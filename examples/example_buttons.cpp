@@ -33,7 +33,7 @@
 #include "ProgressBar.hpp"
 #include <fstream>
 
-int main( int __attribute__((unused))argc, char* __attribute__((unused))argv[] ){
+int main( int unused(argc), char* unused(argv)[] ){
     using namespace cursed;
     ::setlocale(LC_ALL, "");
     cursed::Log::setOutputStream( new std::ofstream("test_example_buttons.txt") );
@@ -48,7 +48,8 @@ int main( int __attribute__((unused))argc, char* __attribute__((unused))argv[] )
     ScrollBar* vscroller = nullptr;
     ProgressBar* progressBar = nullptr;
 
-    Application app{ Direction::Vertical, {
+    Application app{ argv[0], 
+        Direction::Vertical, {
         { 0, label = new Label{ "some text for a label" } }, 
         { 1, hscroller = new ScrollBar{ Direction::Horizontal, "horizontal-scroll" } }, 
         { 1, progressBar = new ProgressBar{ Direction::Horizontal, { 10, { 1, 20 } }, "progress-bar" } },
@@ -68,7 +69,7 @@ int main( int __attribute__((unused))argc, char* __attribute__((unused))argv[] )
                 }
             }
         }}
-    }};
+    } };
 
     const cursed::Color red    = {1000,    0 ,   0 };
     const cursed::Color mutedGreen  = {   250, 500, 300 };

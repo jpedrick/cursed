@@ -71,11 +71,11 @@ void Window::destroy(){
 IWindow* Window::childAt( const Point& p ) const{
     for( auto child : _layout.objects() ){ 
         if( child->dimensions().contains( p ) ){
-            return child->childAt( dimensions().topLeft - p );
+            return child;
         }
     }
 
-    return const_cast<Window*>(this);
+    return nullptr;
 }
 
 Point Window::absolute( const Point& p ) const{
@@ -84,7 +84,7 @@ Point Window::absolute( const Point& p ) const{
     return dimensions().topLeft + p;
 }
 
-void Window::draw( bool fullRefresh ) {
+void Window::draw( bool fullRefresh [[gnu::unused]] ) {
 
 }
 
@@ -104,6 +104,14 @@ void Window::setParent( IWindow* par, int& i ) {
         newname << _id; 
         _name = newname.str(); 
     }
+
+    if( par ){
+        _application = par->application();
+    }
+}
+
+Application* Window::application(){
+    return _application;
 }
 
 void Window::setBorderStyle( BoxStyle style ){
